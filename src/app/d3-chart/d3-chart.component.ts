@@ -2,7 +2,7 @@ import * as d3 from "d3";
 import { Component, OnInit, Input } from '@angular/core';
 import { DnDTargetModuleModel } from '../d3-wrappers/models/dnd-target-module.model';
 import { DnDSourceModuleModel } from '../d3-wrappers/models/dnd-source-module.model';
-import { D3DnDSelection } from '../d3-wrappers/d3-selection.wrapper';
+import { D3DnDSelection, D3SelectionType } from '../d3-wrappers/d3-selection.wrapper';
 import { D3GroupWrapper } from '../d3-wrappers/d3-group.wrapper';
 
 @Component({
@@ -66,10 +66,10 @@ export class D3ChartComponent implements OnInit {
 
   private initGroups(): D3DnDSelection<DnDModule> {
     return this.svgContainer
-      .selectAll('g')
+      .selectAll(D3SelectionType.GROUP)
       .data(this.modules)
       .enter()
-      .append('g')
+      .append(D3SelectionType.GROUP)
       .attr('transform', (data) => `translate(${data.x}, ${data.y})`)
       .attr('type', (data) => data.type)
       .attr('id', (data) => data.id)

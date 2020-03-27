@@ -1,6 +1,6 @@
 import { symbol, symbolCross } from "d3";
 import { DnDModule } from '../d3-chart/d3-chart.component';
-import { D3SelectionWrapper } from './d3-selection.wrapper';
+import { D3SelectionWrapper, D3SelectionType } from './d3-selection.wrapper';
 
 export class D3PathWrapper<DATA extends DnDModule> extends D3SelectionWrapper<DATA> {
 
@@ -17,7 +17,7 @@ export class D3PathWrapper<DATA extends DnDModule> extends D3SelectionWrapper<DA
   }
 
   public static create<DATA extends DnDModule>(selection: d3.Selection<SVGGElement, DATA, d3.BaseType, any>): D3PathWrapper<DATA> {
-    return new D3PathWrapper<DATA>(selection.append('path'));
+    return new D3PathWrapper<DATA>(selection.append(D3SelectionType.PATH));
   }
 
   public static createCrossSymbol<DATA extends DnDModule>(selection: d3.Selection<SVGGElement, DATA, d3.BaseType, any>): D3PathWrapper<DATA> {

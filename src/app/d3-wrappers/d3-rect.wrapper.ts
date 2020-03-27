@@ -1,5 +1,5 @@
 import { DnDModule } from '../d3-chart/d3-chart.component';
-import { D3SelectionWrapper, D3AttributeValue, D3DnDSelection } from './d3-selection.wrapper';
+import { D3SelectionWrapper, D3AttributeValue, D3DnDSelection, D3SelectionType } from './d3-selection.wrapper';
 
 export class D3RectWrapper<DATA extends DnDModule = DnDModule> extends D3SelectionWrapper<DATA> {
 
@@ -50,6 +50,6 @@ export class D3RectWrapper<DATA extends DnDModule = DnDModule> extends D3Selecti
   }
 
   public static create<DATA extends DnDModule>(selection: D3DnDSelection<DATA>): D3RectWrapper<DATA> {
-    return new D3RectWrapper<DATA>(selection.append('rect'));
+    return new D3RectWrapper<DATA>(selection.append(D3SelectionType.RECT));
   }
 }

@@ -1,5 +1,5 @@
 import { DnDModule, DnDSourceModule } from '../d3-chart/d3-chart.component';
-import { D3SelectionWrapper, D3AttributeValue, D3DnDSelection } from './d3-selection.wrapper';
+import { D3SelectionWrapper, D3AttributeValue, D3DnDSelection, D3SelectionType } from './d3-selection.wrapper';
 
 export class D3TextWrapper<DATA extends DnDModule> extends D3SelectionWrapper<DATA> {
 
@@ -29,7 +29,7 @@ export class D3TextWrapper<DATA extends DnDModule> extends D3SelectionWrapper<DA
   }
 
   public static create<DATA extends DnDModule>(selection: D3DnDSelection<DATA>): D3TextWrapper<DATA> {
-    return new D3TextWrapper<DATA>(selection.append('text'));
+    return new D3TextWrapper<DATA>(selection.append(D3SelectionType.TEXT));
   }
 
   public static createCenteredText<DATA extends DnDSourceModule>(selection: D3DnDSelection<DATA>): D3TextWrapper<DATA> {

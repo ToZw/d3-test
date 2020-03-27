@@ -48,3 +48,10 @@ export abstract class D3SelectionWrapper<DATA extends DnDModule = DnDModule> {
 export type D3DnDSelection<DATA = DnDModule> = d3.Selection<SVGGElement, DATA, d3.BaseType, any>;
 
 export type D3AttributeValue<DATA = DnDModule> = d3.ValueFn<any, DATA, string | number | boolean | null> | string | number | boolean | null;
+
+export enum D3SelectionType {
+  GROUP = 'g',
+  RECT = 'rect',
+  TEXT = 'text',
+  PATH = 'path'
+}
