@@ -1,9 +1,9 @@
-import { DnDModule } from '../d3-chart/d3-chart.component';
-import { D3SelectionWrapper, D3AttributeValue, D3DnDSelection, D3SelectionType } from './d3-selection.wrapper';
+import { D3AttributeValue, D3Selection, D3SelectionType } from './d3-selection.wrapper';
+import { D3ContainerWrapper } from './d3-container.wrapper';
 
-export class D3RectWrapper<DATA extends DnDModule = DnDModule> extends D3SelectionWrapper<DATA> {
+export class D3RectWrapper<DATA> extends D3ContainerWrapper<DATA> {
 
-  public constructor(selection: D3DnDSelection<DATA>) {
+  public constructor(selection: D3Selection<DATA>) {
     super(selection);
   }
 
@@ -15,41 +15,7 @@ export class D3RectWrapper<DATA extends DnDModule = DnDModule> extends D3Selecti
     return this.attr('height', height);
   }
 
-  public fill(color: D3AttributeValue<DATA>): this {
-    return this.attr('fill', color);
-  }
-
-  public stroke(color: D3AttributeValue<DATA>): this {
-    return this.attr('stroke', color);
-  }
-
-  public strokeDasharray(dashArray: D3AttributeValue<DATA>): this {
-    return this.attr('stroke-dasharray', dashArray);
-  }
-
-  public strokeLinecap(lineCap: D3AttributeValue<DATA>): this {
-    return this.attr('stroke-linecap', lineCap);
-  }
-
-  public strokeWidth(width: D3AttributeValue<DATA>): this {
-    return this.attr('stroke-width', width);
-  }
-
-  public setSolidBorder() {
-    return this.stroke('#2378ae')
-      .strokeDasharray('unset')
-      .strokeLinecap('butt')
-      .strokeWidth('3');
-  }
-
-  public setDashedBorder() {
-    return this.stroke('#2378ae')
-      .strokeDasharray('10.5')
-      .strokeLinecap('butt')
-      .strokeWidth('3');
-  }
-
-  public static create<DATA extends DnDModule>(selection: D3DnDSelection<DATA>): D3RectWrapper<DATA> {
+  public static create<DATA>(selection: D3Selection<DATA>): D3RectWrapper<DATA> {
     return new D3RectWrapper<DATA>(selection.append(D3SelectionType.RECT));
   }
 }

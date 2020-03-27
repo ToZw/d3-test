@@ -1,5 +1,5 @@
 import { DnDSourceModule } from '../../d3-chart/d3-chart.component';
-import { D3DnDSelection } from '../d3-selection.wrapper';
+import { D3Selection } from '../d3-selection.wrapper';
 import { D3RectWrapper } from '../d3-rect.wrapper';
 import { D3TextWrapper } from '../d3-text.wrapper';
 import { DnDModuleModel } from './dnd-module.model';
@@ -9,12 +9,12 @@ export class DnDSourceModuleModel<DATA extends DnDSourceModule = DnDSourceModule
 
   private group: D3GroupWrapper<DATA>;
 
-  public constructor(selection: D3DnDSelection<DATA>) {
+  public constructor(selection: D3Selection<DATA>) {
     this.group = new D3GroupWrapper(selection);
   }
 
   public build(): this {
-    const selection: D3DnDSelection<DATA> = this.group.getSelection();
+    const selection: D3Selection<DATA> = this.group.getSelection();
 
     D3RectWrapper.create(selection)
       .width(data => data.width)

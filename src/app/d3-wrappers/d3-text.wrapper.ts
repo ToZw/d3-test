@@ -1,9 +1,10 @@
-import { DnDModule, DnDSourceModule } from '../d3-chart/d3-chart.component';
-import { D3SelectionWrapper, D3AttributeValue, D3DnDSelection, D3SelectionType } from './d3-selection.wrapper';
+import { DnDSourceModule } from '../d3-chart/d3-chart.component';
+import { D3SelectionWrapper, D3AttributeValue, D3Selection, D3SelectionType } from './d3-selection.wrapper';
+import { D3ContainerWrapper } from './d3-container.wrapper';
 
-export class D3TextWrapper<DATA extends DnDModule> extends D3SelectionWrapper<DATA> {
+export class D3TextWrapper<DATA> extends D3ContainerWrapper<DATA> {
 
-  public constructor(selection: D3DnDSelection<DATA>) {
+  public constructor(selection: D3Selection<DATA>) {
     super(selection);
   }
 
@@ -28,11 +29,20 @@ export class D3TextWrapper<DATA extends DnDModule> extends D3SelectionWrapper<DA
     return this;
   }
 
-  public static create<DATA extends DnDModule>(selection: D3DnDSelection<DATA>): D3TextWrapper<DATA> {
+  public textAnchor(textAnchor: D3AttributeValue<DATA>): this {
+    return this.attr('text-anchor', textAnchor);
+  }
+
+  // @Override
+  public clone(deep?: boolean): D3TextWrapper<DATA> {
+    return new D3TextWrapper<DATA>(super.clone(deep).getSelection());
+  }
+
+  public static create<DATA>(selection: D3Selection<DATA>): D3TextWrapper<DATA> {
     return new D3TextWrapper<DATA>(selection.append(D3SelectionType.TEXT));
   }
 
-  public static createCenteredText<DATA extends DnDSourceModule>(selection: D3DnDSelection<DATA>): D3TextWrapper<DATA> {
+  public static createCenteredText<DATA extends DnDSourceModule>(selection: D3Selection<DATA>): D3TextWrapper<DATA> {
     return D3TextWrapper.create(selection)
       .x((data) => data.width / 4)
       .y((data) => data.height / 2)

@@ -7,4 +7,7 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'd3-test';
+
+  public constructor() {
+  }
 }
