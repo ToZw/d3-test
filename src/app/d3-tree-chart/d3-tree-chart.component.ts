@@ -1,10 +1,7 @@
 import * as d3 from "d3";
 import { Component, OnInit } from '@angular/core';
 import { treeData } from './example.json';
-import { D3GroupWrapper } from '../d3-wrappers/d3-group.wrapper';
-import { D3Selection, D3SelectionType } from '../d3-wrappers/d3-selection.wrapper';
-import { D3PathWrapper } from '../d3-wrappers/d3-path.wrapper';
-import { DnDTargetModuleModel } from '../d3-wrappers/models/dnd-target-module.model';
+import { D3SelectionTest, D3SelectionType } from '../d3-wrappers/d3-selection-test';
 
 @Component({
   selector: 'app-d3-tree-chart',
@@ -22,54 +19,46 @@ export class D3TreeChartComponent implements OnInit {
     const root: d3.HierarchyPointNode<any> = this.tree(treeData);
     const size: { start: number, end: number } = this.setSvgSize(root);
 
-    const svg = d3.select('#tree-chart')
-      .append("svg")
-      .attr("viewBox", [0, 0, this.zoom, size.start - size.end + (root as any).dx * 2] as any) as D3Selection<any>;
+    const svg = D3SelectionTest
+      .select('#tree-chart')
+      .appendSVG()
+      .viewBox([0, 0, this.zoom, size.start - size.end + (root as any).dx * 2] as any);
 
-    const group: D3GroupWrapper<any> = D3GroupWrapper.create(svg)
+    const group: D3SelectionTest = svg
+      .appendGroup()
       .fontFamily("sans-serif")
       .fontSize(10)
       .transform(`translate(${(root as any).dy / 3},${(root as any).dx - size.end})`);
 
-    const link = new D3PathWrapper<d3.HierarchyPointLink<any>>(
-      group.appendGroup()
-        .fill("none")
-        .stroke("#555")
-        .strokeOpacity(0.4)
-        .strokeWidth(1.5)
-        .selectAll(D3SelectionType.PATH)
-        .data<d3.HierarchyPointLink<any>>(root.links())
-        .join(D3SelectionType.PATH)
-        .getSelection())
+    const link = group
+      .appendGroup()
+      .fill("none")
+      .stroke("#555")
+      .strokeOpacity(0.4)
+      .strokeWidth(1.5)
+      .selectAll(D3SelectionType.PATH)
+      .data<d3.HierarchyPointLink<any>>(root.links())
+      .join(D3SelectionType.PATH)
       .d(d3.linkHorizontal()
         .x(data => (data as any).y)
-        .y(data => (data as any).x) as any);
+        .y(data => (data as any).x));
 
-    // new DnDTargetModuleModel(
-    //   new D3GroupWrapper(
-    //     group
-    //       .selectAll(D3SelectionType.GROUP)
-    //       .data<any>(root.descendants())
-    //       .join(D3SelectionType.GROUP)
-    //       .getSelection())
-    //     .getSelection())
-    //   .build();
+    const node = group
+      .appendGroup()
+      .strokeLinejoin("round")
+      .strokeWidth(3)
+      .selectAll(D3SelectionType.GROUP)
+      .data<d3.HierarchyPointNode<any>>(root.descendants())
+      .join(D3SelectionType.GROUP)
+      .transform(data => `translate(${data.y},${data.x})`);
 
-    const node = new D3GroupWrapper<d3.HierarchyPointNode<any>>(
-      group.appendGroup()
-        .strokeLinejoin("round")
-        .strokeWidth(3)
-        .selectAll(D3SelectionType.GROUP)
-        .data<d3.HierarchyPointNode<any>>(root.descendants())
-        .join(D3SelectionType.GROUP)
-        .transform(data => `translate(${data.y},${data.x})`).getSelection()
-    );
-
-    node.appendCircle()
+    node
+      .appendCircle()
       .fill(data => data.children ? "#555" : "#999")
       .radius(2.5);
 
-    node.appendText()
+    node
+      .appendText()
       .dy("0.31em")
       .x(data => data.children ? -6 : 6)
       .textAnchor(data => data.children ? "end" : "start")

@@ -1,9 +1,6 @@
 import * as d3 from "d3";
 import { Component, OnInit, Input } from '@angular/core';
-import { DnDTargetModuleModel } from '../d3-wrappers/models/dnd-target-module.model';
-import { DnDSourceModuleModel } from '../d3-wrappers/models/dnd-source-module.model';
-import { D3Selection, D3SelectionType } from '../d3-wrappers/d3-selection.wrapper';
-import { D3GroupWrapper } from '../d3-wrappers/d3-group.wrapper';
+import { D3SelectionTest, D3SelectionType } from '../d3-wrappers/d3-selection-test';
 
 @Component({
   selector: 'app-d3-chart',
@@ -27,24 +24,25 @@ export class D3ChartComponent implements OnInit {
     { id: 'link_2', sourceId: 'target_2', targetId: 'target_3' }
   ]
 
-  private svgContainer: D3Selection<any>;
+  private svgContainer: D3SelectionTest;
 
   // private draggingTimeout: any;
 
-  private currentDragSelection: D3GroupWrapper<DnDSourceModule>;
+  private currentDragSelection: D3SelectionTest;
 
-  private hoveredTargetSelection: DnDTargetModuleModel;
+  private hoveredTargetSelection: D3SelectionTest;
 
   public constructor() {
   }
 
   ngOnInit() {
-    this.svgContainer = d3.select('#dnd-chart')
-      .append('svg')
-      .attr('width', 1500)
-      .attr('height', 1500) as D3Selection<any>;
+    this.svgContainer = D3SelectionTest
+      .select('#dnd-chart')
+      .appendSVG()
+      .width(1500)
+      .height(1500);
 
-    const groups: D3Selection<DnDModule> = this.initGroups();
+    const groups: D3SelectionTest = this.initGroups();
 
     this.createDnDSources(this.filterGroups(groups, DnDModuleType.DND_SOURCE));
     this.createDnDTargets(this.filterGroups(groups, DnDModuleType.DND_TARGET));
@@ -56,29 +54,39 @@ export class D3ChartComponent implements OnInit {
    * @param groups all groups, not {@code null}
    * @param filterSubType {@enum DnDModuleType} which should be filtered or {@code null}
    */
-  private filterGroups<SUBTYPE extends DnDModule>(groups: D3Selection<DnDModule>, filterSubType: DnDModuleType): D3Selection<SUBTYPE> {
+  private filterGroups(groups: D3SelectionTest, filterSubType: DnDModuleType): D3SelectionTest {
     if (!groups) {
       throw new Error(`The parameter 'groups' is required!, ${groups}`);
     }
 
-    return groups.filter(`g[type="${filterSubType}"]`) as D3Selection<SUBTYPE>;
+    return groups.filter(`g[type="${filterSubType}"]`);
   }
 
-  private initGroups(): D3Selection<DnDModule> {
+  private initGroups(): D3SelectionTest {
     return this.svgContainer
       .selectAll(D3SelectionType.GROUP)
       .data<DnDModule>(this.modules)
       .enter()
-      .append(D3SelectionType.GROUP)
-      .attr('transform', (data) => `translate(${data.x}, ${data.y})`)
-      .attr('type', (data) => data.type)
-      .attr('id', (data) => data.id)
+      .appendGroup()
+      .transform((data) => `translate(${data.x}, ${data.y})`)
+      .type((data) => data.type)
+      .id((data) => data.id);
   }
 
-  private createDnDSources(groups: d3.Selection<SVGGElement, DnDSourceModule, d3.BaseType, any>) {
-    new DnDSourceModuleModel(groups).build();
+  private createDnDSources(groups: D3SelectionTest): void {
+    groups
+      .appendRect()
+      .width(data => data.width)
+      .height(data => data.height)
+      .fill('white')
+      .setSolidBorder();
+    groups
+      .appendText()
+      .x((data) => data.width / 4)
+      .y((data) => data.height / 2)
+      .dy('.35em')
+      .text((data) => data.value);
 
-    // groups.call(addDnDDragging<DnDSourceModule, DnDTargetModule>(DnDModuleType.DND_SOURCE, DnDModuleType.DND_TARGET));
     groups.call(
       d3.drag()
         .on('start', (data: DnDSourceModule, index: number, elementGroup: any) => {
@@ -93,14 +101,13 @@ export class D3ChartComponent implements OnInit {
 
           // this.draggingTimeout = setTimeout(() => this.draggingTimeout = null, 100);
 
-          const newHoveredTargetSelection: DnDTargetModuleModel<DnDTargetModule> | null = this.findHoveredTargetModule(data);
+          const newHoveredTargetSelection: D3SelectionTest | null = this.findHoveredTargetModule(data);
 
           if (!newHoveredTargetSelection
-            || (this.hoveredTargetSelection && newHoveredTargetSelection.getGroup().getId() !== this.hoveredTargetSelection.getGroup().getId())) {
+            || (this.hoveredTargetSelection && newHoveredTargetSelection.getId() !== this.hoveredTargetSelection.getId())) {
 
             if (this.hoveredTargetSelection) {
               this.hoveredTargetSelection
-                .getGroup()
                 .selectFirstRect()
                 .stroke('#2378ae');
             }
@@ -111,14 +118,12 @@ export class D3ChartComponent implements OnInit {
 
           this.hoveredTargetSelection = newHoveredTargetSelection;
           this.hoveredTargetSelection
-            .getGroup()
             .selectFirstRect()
             .stroke('red');
         })
         .on('end', (data: DnDSourceModule) => {
           if (this.hoveredTargetSelection) {
             this.hoveredTargetSelection
-              .getGroup()
               .selectFirstRect()
               .stroke('#2378ae');
             this.hoveredTargetSelection = null;
@@ -133,7 +138,6 @@ export class D3ChartComponent implements OnInit {
           }
 
           targetSelection
-            .getGroup()
             .selectFirstRect()
             .width(data.width)
             .height(data.height)
@@ -141,7 +145,6 @@ export class D3ChartComponent implements OnInit {
             .setSolidBorder();
 
           targetSelection
-            .getGroup()
             .selectFirstText()
             .text(data.value);
 
@@ -151,7 +154,7 @@ export class D3ChartComponent implements OnInit {
     );
   }
 
-  private findHoveredTargetModule(data: DnDSourceModule): DnDTargetModuleModel<DnDTargetModule> | null {
+  private findHoveredTargetModule(data: DnDSourceModule): D3SelectionTest | null {
     const targetModules: DnDTargetModule[] = this.modules
       .filter(module => module.type === DnDModuleType.DND_TARGET)
       .filter(
@@ -163,7 +166,7 @@ export class D3ChartComponent implements OnInit {
       return null;
     }
 
-    return new DnDTargetModuleModel(this.svgContainer.select(`#${targetModules[0].id}`) as D3Selection<DnDTargetModule>);
+    return this.svgContainer.select(`#${targetModules[0].id}`);
   }
 
   private isIntersection(first: { top: number, right: number, bottom: number, left: number }, second: { top: number, right: number, bottom: number, left: number }) {
@@ -173,40 +176,67 @@ export class D3ChartComponent implements OnInit {
       second.bottom < first.top);
   }
 
-  private createDnDTargets(groups: D3Selection<DnDTargetModule>) {
-    new DnDTargetModuleModel(groups)
-      .build(
-        (data) => this.addDnDTargetModule({ type: DnDModuleType.DND_TARGET, id: data.id + (data.x + 200), x: data.x + 200, y: data.y, width: 100, height: 100 }),
-        (data) => this.addDnDTargetModule({ type: DnDModuleType.DND_TARGET, id: data.id + (data.y + 200), x: data.x, y: (data.y + 200), width: 100, height: 100 })
-      );
+  private createDnDTargets(groups: D3SelectionTest): void {
+    const defaultWidth: number = 25;
+
+    groups
+      .appendRect()
+      .width(data => data.width ? data.width : defaultWidth)
+      .height(data => data.height ? data.height : defaultWidth)
+      .fill('white')
+      .stroke('#2378ae')
+      .strokeDasharray('10,5')
+      .strokeLinecap('butt')
+      .strokeWidth('3');
+
+    groups
+      .appendText()
+      .x((data) => (data.width ? data.width : defaultWidth) / 4)
+      .y((data) => (data.height ? data.height : defaultWidth) / 2)
+      .dy('.35em')
+      .text('Drag here');
+
+    groups
+      .appendPath()
+      .setSymbol(
+        d3.symbol()
+          .size(300)
+          .type(d3.symbolCross))
+      .transform((data) => `translate(${data.width + 25}, ${data.height / 2})`)
+      .onClick((data) => this.addDnDTargetModule({ type: DnDModuleType.DND_TARGET, id: data.id + (data.x + 200), x: data.x + 200, y: data.y, width: 100, height: 100 }));
+
+    groups
+      .appendPath()
+      .setSymbol(
+        d3.symbol()
+          .size(300)
+          .type(d3.symbolCross))
+      .transform((data) => `translate(${data.width / 2}, ${data.height + 25})`)
+      .onClick((data) => this.addDnDTargetModule({ type: DnDModuleType.DND_TARGET, id: data.id + (data.y + 200), x: data.x, y: (data.y + 200), width: 100, height: 100 }));
   }
 
   private addDnDTargetModule(newModule: DnDTargetModule) {
     this.modules.push(newModule);
     const newGroup = this.initGroups();
-    this.createDnDTargets(newGroup as D3Selection<DnDTargetModule>);
+    this.createDnDTargets(newGroup);
   }
 
   private createDraggingSource(data: DnDSourceModule, index: number, elementGroup: any) {
-    this.currentDragSelection = new D3GroupWrapper(
-      D3GroupWrapper.create<DnDSourceModule>(this.svgContainer)
-        .datum<DnDSourceModule>(data)
-        .getSelection())
+    this.currentDragSelection = this.svgContainer
+      .appendGroup()
+      .datum<DnDSourceModule>(data)
       .transform((data) => `translate(${data.x}, ${data.y})`);
 
-    new D3GroupWrapper(
-      this.currentDragSelection
-        .datum<DnDSourceModule>(data)
-        .getSelection())
+    this.currentDragSelection
+      .datum<DnDSourceModule>(data)
       .appendRect()
       .width(data => data.width)
       .height(data => data.height)
       .fill('white')
       .setSolidBorder();
 
-    new D3GroupWrapper(
-      this.currentDragSelection
-        .datum(data).getSelection())
+    this.currentDragSelection
+      .datum(data)
       .appendText()
       .x((data) => data.width / 4)
       .y((data) => data.height / 2)
