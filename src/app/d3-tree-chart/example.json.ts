@@ -1,7 +1,12 @@
 export const treeData: any = {
   "sources": [
-    { "dndType": "DnDSource", "id": 'source_1', "x": 50, "y": 100, "width": 50, "height": 50, "value": 'Source 1' },
-    { "dndType": "DnDSource", "id": 'source_2', "x": 50, "y": 300, "width": 50, "height": 50, "value": 'Source 2' }
+    { "dndType": "DnDSource", "id": "source_1", "x": 50, "y": 100, "width": 50, "height": 50, "value": "Customer Input Data SECIF1" },
+    { "dndType": "DnDSource", "id": "source_2", "x": 50, "y": 300, "width": 50, "height": 50, "value": "Credit Data SECIF1" },
+    { "dndType": "DnDSource", "id": "source_3", "x": 50, "y": 300, "width": 50, "height": 50, "value": "BASIC Data SECIF1" },
+    { "dndType": "DnDSource", "id": "source_4", "x": 50, "y": 300, "width": 50, "height": 50, "value": "Another source" },
+    { "dndType": "DnDSource", "id": "source_5", "x": 50, "y": 300, "width": 50, "height": 50, "value": "Just another source" },
+    { "dndType": "DnDSource", "id": "source_6", "x": 50, "y": 300, "width": 50, "height": 50, "value": "Whoohoo a source" },
+    { "dndType": "DnDSource", "id": "source_7", "x": 50, "y": 300, "width": 50, "height": 50, "value": "Yup I'm a source" }
   ],
   "tree": {
     "id": "root",

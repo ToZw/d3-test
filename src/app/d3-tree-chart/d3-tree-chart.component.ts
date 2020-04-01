@@ -13,11 +13,16 @@ import { D3TreeWrapper } from '../d3-wrappers/d3-tree.wrapper';
 export class D3TreeChartComponent implements OnInit {
 
   @Input()
+  public chartSources: any[] = treeData.sources;
+
+  @Input()
   public chartData: any = treeData.tree;
 
   private svgContainer: D3SelectionTest;
 
   private rootGroup: D3SelectionTest;
+
+  private sourceGroup: D3SelectionTest;
 
   private zoom: number = 1554;
 
@@ -41,19 +46,26 @@ export class D3TreeChartComponent implements OnInit {
     this.svgContainer.appendBackgroundColorRect('lightgrey');
     this.rootGroup = this.svgContainer.appendGroup();
 
-    this.createDnDSources(treeData.sources);
+    this.createDnDSources(this.chartSources);
     this.d3TreeWrapper = new D3TreeWrapper(this.rootGroup, this.chartData, { marginLeft: 300 });
   }
 
   private createDnDSources(sources: DnDSourceModule[]): void {
-    const groups: D3SelectionTest = this.rootGroup
+    if (!this.sourceGroup) {
+      this.sourceGroup = this.rootGroup
+        .appendGroup()
+        .id('sources');
+    }
+
+    const groups: D3SelectionTest = this.sourceGroup
       .selectAll(D3SelectionType.GROUP)
       .data<DnDModule>(sources, source => source.id)
       .join(D3SelectionType.GROUP)
       .transform((data) => `translate(${data.x}, ${data.y})`)
       .dndType((data) => data.dndType)
       .id((data) => data.id)
-      .cursor('pointer');
+      .cursor('pointer')
+      .filterEmptyGroups();
 
     groups
       .appendRect()
@@ -186,7 +198,6 @@ export class D3TreeChartComponent implements OnInit {
     /* update rect */
     targetSelection
       .selectFirstRect()
-      // .y(data.height / 2)
       .width(data.width)
       .height(data.height)
       .fill('white')
@@ -205,5 +216,20 @@ export class D3TreeChartComponent implements OnInit {
 
     this.currentDragSelection.remove();
     this.currentDragSelection = null;
+  }
+
+
+  public appendNewSources() {
+    const length: number = this.getRandomInt(this.chartSources.length);
+    const indices: number[] = Array.apply(this, Array(length)).map(() => this.getRandomInt(this.chartSources.length - 1))
+    const filteredSources: any[] = this.chartSources.filter((source: any, index: number) => indices.includes(index));
+    filteredSources.forEach((source: any, index: number) => source.y = index * 200 + 100);
+
+    this.createDnDSources(filteredSources);
+  }
+
+  private getRandomInt(max: number): number {
+    const result = Math.floor(Math.random() * Math.floor(max));
+    return result !== 0 ? result : 1;
   }
 }

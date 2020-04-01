@@ -25,10 +25,7 @@ export class DnDTargetNodeModel extends AbstractNodeModel {
       .appendText()
       .centerTextInRect({ rectWidth: this.defaultSize, rectHeight: this.defaultSize })
       // .text('Drag here');
-      .text(node => {
-        console.log('id', node.data.id);
-        return node.data.id
-      });
+      .text(node => node.data.id);
 
     newGroups
       .appendPath()
