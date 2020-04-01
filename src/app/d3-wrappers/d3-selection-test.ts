@@ -241,6 +241,21 @@ export class D3SelectionTest {
       .strokeWidth('3');
   }
 
+  /**
+   * This function centering the text in the given size of the rect.
+   * If no size is passed, the datas 'width' and 'height' property is taken.
+   *
+   * @param size the size of the rect, the text should be centered.
+   * @see https://stackoverflow.com/a/47319284
+   */
+  public centerTextInRect(size?: { rectWidth: number, rectHeight: number }): this {
+    return this
+      .x(data => (size && size.rectWidth ? size.rectWidth : data.width) / 2)
+      .y(data => (size && size.rectHeight ? size.rectHeight : data.height) / 2)
+      .dominantBaseline('middle')
+      .textAnchor("middle");
+  }
+
   public appendBackgroundColorRect(color: string): D3SelectionTest {
     return this
       .appendRect()
@@ -280,6 +295,11 @@ export class D3SelectionTest {
   public text(text: D3AttributeValue): this {
     this.selection.text(text as any);
     return this;
+  }
+
+
+  public dominantBaseline(value: D3AttributeValue): this {
+    return this.attr('dominant-baseline', value);
   }
 
   public textAnchor(textAnchor: D3AttributeValue): this {

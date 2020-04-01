@@ -61,11 +61,10 @@ export class D3TreeChartComponent implements OnInit {
       .height(data => data.height)
       .fill('white')
       .setSolidBorder();
+
     groups
       .appendText()
-      .x((data) => data.width / 10)
-      .y((data) => data.height / 2)
-      .dy('.35em')
+      .centerTextInRect()
       .text((data) => data.value);
 
     groups.call(
@@ -97,9 +96,7 @@ export class D3TreeChartComponent implements OnInit {
     this.currentDragSelection
       .datum(data)
       .appendText()
-      .x((data) => data.width / 4)
-      .y((data) => data.height / 2)
-      .dy('.35em')
+      .centerTextInRect()
       .text((data) => data.value);
   }
 
@@ -198,8 +195,7 @@ export class D3TreeChartComponent implements OnInit {
     /* update text */
     targetSelection
       .selectFirstText()
-      .x(data.width / 10)
-      .y(data.height / 2)
+      .centerTextInRect({ rectWidth: data.width, rectHeight: data.height })
       .text(data.value);
 
     /* update add-button */

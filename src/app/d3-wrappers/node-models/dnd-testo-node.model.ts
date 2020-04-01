@@ -23,9 +23,7 @@ export class DnDTestoNodeModel extends AbstractNodeModel {
 
     newGroups
       .appendText()
-      .x(this.defaultSize / 10)
-      .y(this.defaultSize / 2)
-      .dy('.35em')
+      .centerTextInRect({ rectWidth: this.defaultSize, rectHeight: this.defaultSize })
       .text('Drag here');
     // .text(node => node.data.id);
 

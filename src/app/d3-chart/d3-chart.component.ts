@@ -82,9 +82,7 @@ export class D3ChartComponent implements OnInit {
       .setSolidBorder();
     groups
       .appendText()
-      .x((data) => data.width / 4)
-      .y((data) => data.height / 2)
-      .dy('.35em')
+      .centerTextInRect()
       .text((data) => data.value);
 
     groups.call(
@@ -191,9 +189,7 @@ export class D3ChartComponent implements OnInit {
 
     groups
       .appendText()
-      .x((data) => (data.width ? data.width : defaultWidth) / 4)
-      .y((data) => (data.height ? data.height : defaultWidth) / 2)
-      .dy('.35em')
+      .centerTextInRect()
       .text('Drag here');
 
     groups
@@ -238,9 +234,7 @@ export class D3ChartComponent implements OnInit {
     this.currentDragSelection
       .datum(data)
       .appendText()
-      .x((data) => data.width / 4)
-      .y((data) => data.height / 2)
-      .dy('.35em')
+      .centerTextInRect()
       .text((data) => data.value);
   }
 }

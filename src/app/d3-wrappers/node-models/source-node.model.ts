@@ -19,9 +19,7 @@ export class SourceNodeModel extends AbstractNodeModel {
 
     newGroups
       .appendText()
-      .x(this.defaultSize / 10)
-      .y(this.defaultSize / 2)
-      .dy('.35em')
+      .centerTextInRect({ rectWidth: this.defaultSize, rectHeight: this.defaultSize })
       .text((node) => node.data.value);
   }
 }
