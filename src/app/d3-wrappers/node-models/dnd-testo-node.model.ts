@@ -1,0 +1,53 @@
+import * as d3 from "d3";
+import { D3SelectionTest } from '../d3-selection-test';
+import { D3TreeWrapper } from '../d3-tree.wrapper';
+import { AbstractNodeModel } from './node.model';
+import { DnDModuleType } from 'src/app/d3-chart/d3-chart.component';
+
+export class DnDTestoNodeModel extends AbstractNodeModel {
+
+  protected readonly defaultSize: number = 100;
+
+  public createNodes(d3TreeWrapper: D3TreeWrapper, nodeGroups: D3SelectionTest): void {
+    const newGroups: D3SelectionTest = this.prepare(d3TreeWrapper, nodeGroups);
+
+    newGroups
+      .appendRect()
+      .width(this.defaultSize)
+      .height(this.defaultSize)
+      .fill('white')
+      .stroke('yellow')
+      .strokeDasharray('10,5')
+      .strokeLinecap('butt')
+      .strokeWidth('3');
+
+    newGroups
+      .appendText()
+      .x(this.defaultSize / 10)
+      .y(this.defaultSize / 2)
+      .dy('.35em')
+      .text('Drag here');
+    // .text(node => node.data.id);
+
+    newGroups
+      .appendPath()
+      .setSymbol(
+        d3.symbol()
+          .size(300)
+          .type(d3.symbolCross))
+      .transform(`translate(${this.defaultSize}, 0)`)
+      .cursor('pointer')
+      .onClick((node: d3.HierarchyPointNode<any>) => {
+        const newId = this.createChildId(node);
+
+        d3TreeWrapper.addNode(
+          node,
+          {
+            type: 'testo',
+            dndType: DnDModuleType.DND_TARGET,
+            id: newId,
+            name: newId
+          })
+      });
+  }
+}

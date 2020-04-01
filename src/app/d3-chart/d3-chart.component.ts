@@ -65,7 +65,7 @@ export class D3ChartComponent implements OnInit {
   private initGroups(): D3SelectionTest {
     return this.svgContainer
       .selectAll(D3SelectionType.GROUP)
-      .data<DnDModule>(this.modules)
+      .data<DnDModule>(this.modules, module => module.id)
       .enter()
       .appendGroup()
       .transform((data) => `translate(${data.x}, ${data.y})`)

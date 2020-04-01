@@ -6,8 +6,6 @@ export class D3SelectionTest {
 
   public constructor(selection: D3Selection) {
     this.selection = selection;
-
-    // console.log((this.selection as any)._groups);
   }
 
   public getSelection(): D3Selection {
@@ -26,11 +24,24 @@ export class D3SelectionTest {
     return this.attr('transform', transform);
   }
 
+  public getDatum(): any {
+    return this.selection.datum();
+  }
+
   public datum<NEWDATA>(datum: NEWDATA): D3SelectionTest {
     return new D3SelectionTest(this.selection.datum<NEWDATA>(datum));
   }
 
-  public data<NEWDATA>(data: NEWDATA[] | d3.ValueFn<any, any, NEWDATA[]>, key?: d3.ValueFn<any, any, string>): D3SelectionTest {
+  public getData(): any[] {
+    return this.selection.data();
+  }
+
+  /**
+   * This function passes new data to the selection.
+   * The parameter 'key' is required, because otherwise strange bugs can appear, if the key isn't present and d3-data can't
+   * distinguish between the data.
+   */
+  public data<NEWDATA>(data: NEWDATA[] | d3.ValueFn<any, any, NEWDATA[]>, key: d3.ValueFn<any, any, string>): D3SelectionTest {
     return new D3SelectionTest(this.selection.data<NEWDATA>(data as any, key));
   }
 
@@ -38,20 +49,58 @@ export class D3SelectionTest {
     return new D3SelectionTest(this.selection.filter(filter as any));
   }
 
+  public filterEmptyGroups(): D3SelectionTest {
+    return this.filter((nodeGroup: d3.HierarchyPointNode<any>, index: number, nodes: SVGGElement[]) => nodes[index].children.length === 0);
+  }
+
+  public merge(other: D3SelectionTest): D3SelectionTest {
+    return new D3SelectionTest(this.selection.merge(other.getSelection()));
+  }
+
   public enter(): D3SelectionTest {
     return new D3SelectionTest(this.selection.enter());
   }
 
   public exit<OldDatum>(): D3SelectionTest {
-    return new D3SelectionTest(this.selection.exit());
+    return new D3SelectionTest(this.selection.exit<OldDatum>());
   }
 
-  public join(
-    enter: any,
-    update?: (elem: D3Selection) => D3Selection | undefined,
-    exit?: (elem: D3Selection) => void): D3SelectionTest {
+  /**
+   * The d3-join-function receives all "enter", "update", "exit" elements.
+   * If an "update"-function is passed the passed update-function will be triggered.
+   * Afterwards if there is an "exit"-function passed the passed exit-function will be triggered, otherwise it will remove all
+   * exit elements by default.
+   * In the end if there are "enter" elements, they will be merge with the "update" elements and after that, they will be ordered.
+   * If there are no "enter" elements, the "update" elements will be returned.
+   *
+   * @param enter
+   * @param update
+   * @param exit
+   */
+  public join<TAG extends keyof ElementTagNameMap, OldDatum>(
+    enter: TAG | string | ((elem: D3SelectionTest) => D3SelectionTest),
+    update?: (elem: D3SelectionTest) => D3SelectionTest | undefined,
+    exit?: (elem: D3SelectionTest) => void): D3SelectionTest {
 
-    return new D3SelectionTest(this.selection.join(enter, update, exit));
+    let updateWrapper: (elem: D3Selection) => D3Selection;
+    let exitWrapper: (elem: D3Selection) => void;
+
+    /* Need to wrap the D3-join parameters and return type to work with our D3Selection type */
+    if (update) {
+      updateWrapper = (elem: D3Selection) => {
+        /* Changing the paramter type for the API */
+        const result = update(new D3SelectionTest(elem))
+
+        /* Changing the return type for the d3-join-api */
+        return result.getSelection();
+      };
+    }
+
+    if (exit) {
+      exitWrapper = (elem: D3Selection) => exit(new D3SelectionTest(elem));
+    }
+
+    return new D3SelectionTest(this.selection.join(enter as any, updateWrapper, exitWrapper));
   }
 
   public remove(): this {
@@ -76,12 +125,66 @@ export class D3SelectionTest {
     return this.select(D3SelectionType.TEXT);
   }
 
+  public selectFirstPath(): D3SelectionTest {
+    return this.select(D3SelectionType.PATH);
+  }
+
+  public selectById(id: string): D3SelectionTest {
+    return new D3SelectionTest(this.selection.select(`#${id}`));
+  }
+
   public select(selector: string | d3.ValueFn<any, any, any> | null): D3SelectionTest {
     return new D3SelectionTest(this.selection.select(selector as any));
   }
 
   public selectAll(selector: string | d3.ValueFn<any, any, any[] | ArrayLike<any>> | null): D3SelectionTest {
     return new D3SelectionTest(this.selection.selectAll(selector as any));
+  }
+
+  public empty(): boolean {
+    return this.selection.empty();
+  }
+
+  /**
+   * Invoke the specified function for each selected element, passing in the current datum (d),
+   * the current index (i), and the current group (nodes), with this of the current DOM element (nodes[i]).
+   * This method can be used to invoke arbitrary code for each selected element, and is useful for creating a context to access parent and child data simultaneously.
+   *
+   * @param func A function which is invoked for each selected element,
+   *             being passed the current datum (d), the current index (i), and the current group (nodes), with this of the current DOM element (nodes[i]).
+   */
+  public each(func: d3.ValueFn<any, any, void>): this {
+    this.selection.each(func);
+    return this;
+  }
+
+  /**
+   * Return the first (non-null) element in this selection. If the selection is empty, returns null.
+   */
+  node(): any | null {
+    return this.selection.node();
+  }
+
+  /**
+   * Return an array of all (non-null) elements in this selection.
+   */
+  nodes(): any[] {
+    return this.selection.nodes();
+  }
+
+  /**
+   * Returns the total number of elements in this selection.
+   */
+  public size(): number {
+    return this.selection.size();
+  }
+
+  public dndType(dndType: D3AttributeValue): this {
+    return this.attr('dndType', dndType);
+  }
+
+  public getType(): string {
+    return this.getAttr('type');
   }
 
   public type(type: D3AttributeValue): this {
@@ -138,6 +241,14 @@ export class D3SelectionTest {
       .strokeWidth('3');
   }
 
+  public appendBackgroundColorRect(color: string): D3SelectionTest {
+    return this
+      .appendRect()
+      .width('100%')
+      .height('100%')
+      .fill(color);
+  }
+
   public fontFamily(fontFamily: D3AttributeValue): this {
     return this.attr("font-family", fontFamily);
   }
@@ -187,6 +298,19 @@ export class D3SelectionTest {
     return this.attr('d', symbol);
   }
 
+  public cursor(cursor: D3AttributeValue) {
+    return this.attr('style', `cursor:${cursor}`);
+  }
+  // .attr('pointer-events', 'mouseover')
+
+  public xLinkHref(id: D3AttributeValue) {
+    return this.attr('xlink:href', `#${id}`);
+  }
+
+  protected getAttr(name: string): string {
+    return this.selection.attr(name);
+  }
+
   protected attr(name: string, value: D3AttributeValue): this {
     this.selection.attr(name, value as any);
     return this;
@@ -226,6 +350,14 @@ export class D3SelectionTest {
     return this.append(D3SelectionType.PATH);
   }
 
+  public appendUse(): D3SelectionTest {
+    return this.append(D3SelectionType.USE);
+  }
+
+  public appendDefs(): D3SelectionTest {
+    return this.append(D3SelectionType.DEFS);
+  }
+
   private append(type: D3SelectionType): D3SelectionTest {
     return new D3SelectionTest(this.selection.append(type));
   }
@@ -241,7 +373,7 @@ export class D3SelectionTest {
 
 export type D3Selection<DATA = any> = d3.Selection<d3.EnterElement | d3.ContainerElement, DATA, d3.BaseType, any>;
 
-export type D3AttributeValue<DATA = any> = d3.ValueFn<any, DATA, string | number | boolean | null> | string | number | boolean | null;
+export type D3AttributeValue<DATA = any> = d3.ValueFn<any, DATA, string | number | boolean | null> | string | number | boolean | Array<any> | null;
 
 export enum D3SelectionType {
   SVG = 'svg',
@@ -249,5 +381,7 @@ export enum D3SelectionType {
   RECT = 'rect',
   CIRCLE = 'circle',
   TEXT = 'text',
-  PATH = 'path'
+  PATH = 'path',
+  USE = 'use',
+  DEFS = 'defs',
 }

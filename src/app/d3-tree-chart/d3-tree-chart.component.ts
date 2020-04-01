@@ -1,7 +1,9 @@
 import * as d3 from "d3";
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { treeData } from './example.json';
 import { D3SelectionTest, D3SelectionType } from '../d3-wrappers/d3-selection-test';
+import { DnDModuleType, DnDModule, DnDSourceModule } from '../d3-chart/d3-chart.component';
+import { D3TreeWrapper } from '../d3-wrappers/d3-tree.wrapper';
 
 @Component({
   selector: 'app-d3-tree-chart',
@@ -10,86 +12,202 @@ import { D3SelectionTest, D3SelectionType } from '../d3-wrappers/d3-selection-te
 })
 export class D3TreeChartComponent implements OnInit {
 
-  private zoom: number = 954;
+  @Input()
+  public chartData: any = treeData.tree;
+
+  private svgContainer: D3SelectionTest;
+
+  private rootGroup: D3SelectionTest;
+
+  private zoom: number = 1554;
+
+  private currentDragSelection: D3SelectionTest;
+
+  private hoveredTargetSelection: D3SelectionTest;
+
+  private marginLeft: number = 300;
+
+  private d3TreeWrapper: D3TreeWrapper;
 
   public constructor() {
   }
 
   ngOnInit() {
-    const root: d3.HierarchyPointNode<any> = this.tree(treeData);
-    const size: { start: number, end: number } = this.setSvgSize(root);
-
-    const svg = D3SelectionTest
-      .select('#tree-chart')
+    this.svgContainer = D3SelectionTest.select('#tree-chart')
       .appendSVG()
-      .viewBox([0, 0, this.zoom, size.start - size.end + (root as any).dx * 2] as any);
+      .width(1500)
+      .height(1500)
+      .call(d3.zoom().on("zoom", () => this.rootGroup.transform(d3.event.transform)));
+    this.svgContainer.appendBackgroundColorRect('lightgrey');
+    this.rootGroup = this.svgContainer.appendGroup();
 
-    const group: D3SelectionTest = svg
-      .appendGroup()
-      .fontFamily("sans-serif")
-      .fontSize(10)
-      .transform(`translate(${(root as any).dy / 3},${(root as any).dx - size.end})`);
+    this.createDnDSources(treeData.sources);
+    this.d3TreeWrapper = new D3TreeWrapper(this.rootGroup, this.chartData, { marginLeft: 300 });
+  }
 
-    const link = group
-      .appendGroup()
-      .fill("none")
-      .stroke("#555")
-      .strokeOpacity(0.4)
-      .strokeWidth(1.5)
-      .selectAll(D3SelectionType.PATH)
-      .data<d3.HierarchyPointLink<any>>(root.links())
-      .join(D3SelectionType.PATH)
-      .d(d3.linkHorizontal()
-        .x(data => (data as any).y)
-        .y(data => (data as any).x));
-
-    const node = group
-      .appendGroup()
-      .strokeLinejoin("round")
-      .strokeWidth(3)
+  private createDnDSources(sources: DnDSourceModule[]): void {
+    const groups: D3SelectionTest = this.rootGroup
       .selectAll(D3SelectionType.GROUP)
-      .data<d3.HierarchyPointNode<any>>(root.descendants())
+      .data<DnDModule>(sources, source => source.id)
       .join(D3SelectionType.GROUP)
-      .transform(data => `translate(${data.y},${data.x})`);
+      .transform((data) => `translate(${data.x}, ${data.y})`)
+      .dndType((data) => data.dndType)
+      .id((data) => data.id)
+      .cursor('pointer');
 
-    node
-      .appendCircle()
-      .fill(data => data.children ? "#555" : "#999")
-      .radius(2.5);
-
-    node
+    groups
+      .appendRect()
+      .width(data => data.width)
+      .height(data => data.height)
+      .fill('white')
+      .setSolidBorder();
+    groups
       .appendText()
-      .dy("0.31em")
-      .x(data => data.children ? -6 : 6)
-      .textAnchor(data => data.children ? "end" : "start")
-      .text(data => data.data.name)
-      .clone(true)
-      .lower()
-      .stroke("white");
+      .x((data) => data.width / 10)
+      .y((data) => data.height / 2)
+      .dy('.35em')
+      .text((data) => data.value);
+
+    groups.call(
+      d3.drag()
+        .on('start', (data: DnDSourceModule) => this.onDraggingStart(data))
+        .on('drag', (data: DnDSourceModule) => this.onDragging(data))
+        .on('end', (data: DnDSourceModule) => this.onDraggingEnd(data))
+    );
   }
 
-  private tree(data: any): d3.HierarchyPointNode<any> {
-    const root: d3.HierarchyNode<any> = d3.hierarchy(data);
-
-    (root as any).dx = 10;
-    (root as any).dy = this.zoom / (root.height + 1);
-    return d3.tree().nodeSize([(root as any).dx, (root as any).dy])(root);
+  private onDraggingStart(data: DnDSourceModule) {
+    this.createDraggingSource(data);
   }
 
-  private setSvgSize(root: d3.HierarchyPointNode<any>): { start: number, end: number } {
-    let endX = Infinity;
-    let startX = -endX;
+  private createDraggingSource(data: DnDSourceModule) {
+    this.currentDragSelection = this.rootGroup
+      .appendGroup()
+      .datum<DnDSourceModule>(data)
+      .transform((data) => `translate(${data.x}, ${data.y})`);
 
-    root.each(data => {
-      if (data.x > startX) {
-        startX = data.x
+    this.currentDragSelection
+      .datum<DnDSourceModule>(data)
+      .appendRect()
+      .width(data => data.width)
+      .height(data => data.height)
+      .fill('white')
+      .setSolidBorder();
+
+    this.currentDragSelection
+      .datum(data)
+      .appendText()
+      .x((data) => data.width / 4)
+      .y((data) => data.height / 2)
+      .dy('.35em')
+      .text((data) => data.value);
+  }
+
+  private onDragging(data: DnDSourceModule) {
+    this.currentDragSelection.transform((data) => `translate(${d3.event.x}, ${d3.event.y})`);
+
+    // if (this.draggingTimeout) {
+    //   return;
+    // }
+
+    // this.draggingTimeout = setTimeout(() => this.draggingTimeout = null, 100);
+
+    const newHoveredTargetSelection: D3SelectionTest | null = this.findHoveredTargetModule(data);
+
+    if (!newHoveredTargetSelection
+      || (this.hoveredTargetSelection && newHoveredTargetSelection.getId() !== this.hoveredTargetSelection.getId())) {
+
+      if (this.hoveredTargetSelection) {
+        this.hoveredTargetSelection
+          .selectFirstRect()
+          .stroke('#2378ae');
       }
 
-      if (data.x < endX) {
-        endX = data.x
-      }
-    });
+      this.hoveredTargetSelection = newHoveredTargetSelection;
+      return;
+    }
 
-    return { start: startX, end: endX };
+    this.hoveredTargetSelection = newHoveredTargetSelection;
+    this.hoveredTargetSelection
+      .selectFirstRect()
+      .stroke('red');
+  }
+
+  private findHoveredTargetModule(data: DnDSourceModule): D3SelectionTest | null {
+    // const targetModules: d3.HierarchyPointNode<any>[] = this.treeRoot
+    const targetModules: d3.HierarchyPointNode<any>[] = this.d3TreeWrapper
+      .getTreeRoot()
+      .descendants()
+      .filter(module => module.data.dndType === DnDModuleType.DND_TARGET)
+      .filter(
+        module => {
+          const moduleHalfHeight: number = module.data.height / 2;
+          const draggingModule = { top: d3.event.y, left: d3.event.x - this.marginLeft, right: d3.event.x + data.width - this.marginLeft, bottom: d3.event.y + data.height };
+          const targetModule = { top: module.x - moduleHalfHeight, left: module.y, right: module.y + module.data.width, bottom: module.x + moduleHalfHeight };
+
+          return this.isIntersection(targetModule, draggingModule);
+        });
+
+    if (targetModules.length === 0) {
+      return null;
+    }
+
+    return this.rootGroup.select(`#${targetModules[0].data.id}`);
+  }
+
+  private isIntersection(first: { top: number, right: number, bottom: number, left: number }, second: { top: number, right: number, bottom: number, left: number }) {
+    return !(second.left > first.right ||
+      second.right < first.left ||
+      second.top > first.bottom ||
+      second.bottom < first.top);
+  }
+
+  private onDraggingEnd(data: DnDSourceModule) {
+    if (this.hoveredTargetSelection) {
+      this.hoveredTargetSelection
+        .selectFirstRect()
+        .stroke('#2378ae');
+      this.hoveredTargetSelection = null;
+    }
+
+    const targetSelection = this.findHoveredTargetModule(data);
+
+    if (!targetSelection) {
+      this.currentDragSelection.remove();
+      this.currentDragSelection = null;
+      return;
+    }
+
+    /* update group*/
+    targetSelection.transform(node => `translate(${node.y}, ${node.x - data.height / 2})`);
+
+    const node: d3.HierarchyPointNode<any> = targetSelection.getDatum();
+
+    node.data.width = data.width;
+    node.data.height = data.height;
+
+    /* update rect */
+    targetSelection
+      .selectFirstRect()
+      // .y(data.height / 2)
+      .width(data.width)
+      .height(data.height)
+      .fill('white')
+      .setSolidBorder();
+
+    /* update text */
+    targetSelection
+      .selectFirstText()
+      .x(data.width / 10)
+      .y(data.height / 2)
+      .text(data.value);
+
+    /* update add-button */
+    targetSelection
+      .selectFirstPath()
+      .transform(`translate(${data.width}, 0)`);
+
+    this.currentDragSelection.remove();
+    this.currentDragSelection = null;
   }
 }
