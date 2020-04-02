@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 import { Component, OnInit, Input } from '@angular/core';
-import { D3SelectionTest, D3SelectionType } from '../d3-wrappers/d3-selection-test';
+import { D3SelectionWrapper, D3SelectionType } from '../d3-wrappers/d3-selection.wrapper';
 
 @Component({
   selector: 'app-d3-chart',
@@ -24,25 +24,25 @@ export class D3ChartComponent implements OnInit {
     { id: 'link_2', sourceId: 'target_2', targetId: 'target_3' }
   ]
 
-  private svgContainer: D3SelectionTest;
+  private svgContainer: D3SelectionWrapper;
 
   // private draggingTimeout: any;
 
-  private currentDragSelection: D3SelectionTest;
+  private currentDragSelection: D3SelectionWrapper;
 
-  private hoveredTargetSelection: D3SelectionTest;
+  private hoveredTargetSelection: D3SelectionWrapper;
 
   public constructor() {
   }
 
   ngOnInit() {
-    this.svgContainer = D3SelectionTest
+    this.svgContainer = D3SelectionWrapper
       .select('#dnd-chart')
       .appendSVG()
       .width(1500)
       .height(1500);
 
-    const groups: D3SelectionTest = this.initGroups();
+    const groups: D3SelectionWrapper = this.initGroups();
 
     this.createDnDSources(this.filterGroups(groups, DnDModuleType.DND_SOURCE));
     this.createDnDTargets(this.filterGroups(groups, DnDModuleType.DND_TARGET));
@@ -54,7 +54,7 @@ export class D3ChartComponent implements OnInit {
    * @param groups all groups, not {@code null}
    * @param filterSubType {@enum DnDModuleType} which should be filtered or {@code null}
    */
-  private filterGroups(groups: D3SelectionTest, filterSubType: DnDModuleType): D3SelectionTest {
+  private filterGroups(groups: D3SelectionWrapper, filterSubType: DnDModuleType): D3SelectionWrapper {
     if (!groups) {
       throw new Error(`The parameter 'groups' is required!, ${groups}`);
     }
@@ -62,7 +62,7 @@ export class D3ChartComponent implements OnInit {
     return groups.filter(`g[type="${filterSubType}"]`);
   }
 
-  private initGroups(): D3SelectionTest {
+  private initGroups(): D3SelectionWrapper {
     return this.svgContainer
       .selectAll(D3SelectionType.GROUP)
       .data<DnDModule>(this.modules, module => module.id)
@@ -73,7 +73,7 @@ export class D3ChartComponent implements OnInit {
       .id((data) => data.id);
   }
 
-  private createDnDSources(groups: D3SelectionTest): void {
+  private createDnDSources(groups: D3SelectionWrapper): void {
     groups
       .appendRect()
       .width(data => data.width)
@@ -99,7 +99,7 @@ export class D3ChartComponent implements OnInit {
 
           // this.draggingTimeout = setTimeout(() => this.draggingTimeout = null, 100);
 
-          const newHoveredTargetSelection: D3SelectionTest | null = this.findHoveredTargetModule(data);
+          const newHoveredTargetSelection: D3SelectionWrapper | null = this.findHoveredTargetModule(data);
 
           if (!newHoveredTargetSelection
             || (this.hoveredTargetSelection && newHoveredTargetSelection.getId() !== this.hoveredTargetSelection.getId())) {
@@ -152,7 +152,7 @@ export class D3ChartComponent implements OnInit {
     );
   }
 
-  private findHoveredTargetModule(data: DnDSourceModule): D3SelectionTest | null {
+  private findHoveredTargetModule(data: DnDSourceModule): D3SelectionWrapper | null {
     const targetModules: DnDTargetModule[] = this.modules
       .filter(module => module.type === DnDModuleType.DND_TARGET)
       .filter(
@@ -174,7 +174,7 @@ export class D3ChartComponent implements OnInit {
       second.bottom < first.top);
   }
 
-  private createDnDTargets(groups: D3SelectionTest): void {
+  private createDnDTargets(groups: D3SelectionWrapper): void {
     const defaultWidth: number = 25;
 
     groups

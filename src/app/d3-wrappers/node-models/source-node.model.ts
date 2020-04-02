@@ -1,25 +1,45 @@
 import * as d3 from "d3";
-import { D3SelectionTest } from '../d3-selection-test';
-import { D3TreeWrapper } from '../d3-tree.wrapper';
-import { AbstractNodeModel } from './node.model';
+import { D3SelectionWrapper } from '../d3-selection.wrapper';
+import { NodeModelType, NodeModel } from './node.model';
+import { D3DraggingHandler } from 'src/app/drag-and-drop/d3-drag-and-drop-handler';
 
-export class SourceNodeModel extends AbstractNodeModel {
+export class SourceNodeModel implements NodeModel {
 
-  protected readonly defaultSize: number = 50;
+  public readonly type: NodeModelType = NodeModelType.SOURCE;
 
-  public createNodes(d3TreeWrapper: D3TreeWrapper, nodeGroups: D3SelectionTest): void {
-    const newGroups: D3SelectionTest = this.prepare(d3TreeWrapper, nodeGroups);
+  public constructor(private draggingHandler?: D3DraggingHandler<any>) {
+  }
+
+  public createNodes(nodeGroups: D3SelectionWrapper): void {
+    if (!nodeGroups) {
+      throw new Error(`The parameter 'nodeGroups' is required!, ${nodeGroups}`);
+    }
+
+    nodeGroups.transform((node: d3.HierarchyPointNode<any>) => `translate(${node.x}, ${node.y})`);
+
+    /* Filter all new groups, so old groups won't be appended multiple times */
+    const newGroups: D3SelectionWrapper = nodeGroups.filterEmptyGroups();
 
     newGroups
       .appendRect()
-      .width(this.defaultSize)
-      .height(this.defaultSize)
+      .width(node => node.data.width)
+      .height(node => node.data.height)
       .fill('white')
       .setSolidBorder();
 
     newGroups
       .appendText()
-      .centerTextInRect({ rectWidth: this.defaultSize, rectHeight: this.defaultSize })
+      .centerTextInRect()
       .text((node) => node.data.value);
+
+    if (this.draggingHandler) {
+      newGroups.cursor('pointer');
+      newGroups.call(
+        d3.drag()
+          .on('start', this.draggingHandler.onDraggingStart.bind(this.draggingHandler))
+          .on('drag', this.draggingHandler.onDragging.bind(this.draggingHandler))
+          .on('end', this.draggingHandler.onDraggingEnd.bind(this.draggingHandler))
+      );
+    }
   }
 }

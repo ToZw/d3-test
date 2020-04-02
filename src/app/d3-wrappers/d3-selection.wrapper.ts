@@ -1,10 +1,14 @@
 import * as d3 from "d3";
 
-export class D3SelectionTest {
+export class D3SelectionWrapper {
 
   protected selection: D3Selection;
 
   public constructor(selection: D3Selection) {
+    if (!selection) {
+      throw new Error(`The parameter 'selection' is required!, ${selection}`);
+    }
+
     this.selection = selection;
   }
 
@@ -28,8 +32,8 @@ export class D3SelectionTest {
     return this.selection.datum();
   }
 
-  public datum<NEWDATA>(datum: NEWDATA): D3SelectionTest {
-    return new D3SelectionTest(this.selection.datum<NEWDATA>(datum));
+  public datum<NEWDATA>(datum: NEWDATA): D3SelectionWrapper {
+    return new D3SelectionWrapper(this.selection.datum<NEWDATA>(datum));
   }
 
   public getData(): any[] {
@@ -41,28 +45,28 @@ export class D3SelectionTest {
    * The parameter 'key' is required, because otherwise strange bugs can appear, if the key isn't present and d3-data can't
    * distinguish between the data.
    */
-  public data<NEWDATA>(data: NEWDATA[] | d3.ValueFn<any, any, NEWDATA[]>, key: d3.ValueFn<any, any, string>): D3SelectionTest {
-    return new D3SelectionTest(this.selection.data<NEWDATA>(data as any, key));
+  public data<NEWDATA>(data: NEWDATA[] | d3.ValueFn<any, any, NEWDATA[]>, key: d3.ValueFn<any, any, string>): D3SelectionWrapper {
+    return new D3SelectionWrapper(this.selection.data<NEWDATA>(data as any, key));
   }
 
-  public filter(filter: D3AttributeValue): D3SelectionTest {
-    return new D3SelectionTest(this.selection.filter(filter as any));
+  public filter(filter: D3AttributeValue): D3SelectionWrapper {
+    return new D3SelectionWrapper(this.selection.filter(filter as any));
   }
 
-  public filterEmptyGroups(): D3SelectionTest {
+  public filterEmptyGroups(): D3SelectionWrapper {
     return this.filter((nodeGroup: d3.HierarchyPointNode<any>, index: number, nodes: SVGGElement[]) => nodes[index].children.length === 0);
   }
 
-  public merge(other: D3SelectionTest): D3SelectionTest {
-    return new D3SelectionTest(this.selection.merge(other.getSelection()));
+  public merge(other: D3SelectionWrapper): D3SelectionWrapper {
+    return new D3SelectionWrapper(this.selection.merge(other.getSelection()));
   }
 
-  public enter(): D3SelectionTest {
-    return new D3SelectionTest(this.selection.enter());
+  public enter(): D3SelectionWrapper {
+    return new D3SelectionWrapper(this.selection.enter());
   }
 
-  public exit<OldDatum>(): D3SelectionTest {
-    return new D3SelectionTest(this.selection.exit<OldDatum>());
+  public exit<OldDatum>(): D3SelectionWrapper {
+    return new D3SelectionWrapper(this.selection.exit<OldDatum>());
   }
 
   /**
@@ -73,14 +77,14 @@ export class D3SelectionTest {
    * In the end if there are "enter" elements, they will be merge with the "update" elements and after that, they will be ordered.
    * If there are no "enter" elements, the "update" elements will be returned.
    *
-   * @param enter
-   * @param update
-   * @param exit
+   * @param enter elements to append, not {@code null}
+   * @param update the executed update-function or {@code null}
+   * @param exit the executed exit-function or {@code null}
    */
   public join<TAG extends keyof ElementTagNameMap, OldDatum>(
-    enter: TAG | string | ((elem: D3SelectionTest) => D3SelectionTest),
-    update?: (elem: D3SelectionTest) => D3SelectionTest | undefined,
-    exit?: (elem: D3SelectionTest) => void): D3SelectionTest {
+    enter: TAG | string | ((elem: D3SelectionWrapper) => D3SelectionWrapper),
+    update?: (elem: D3SelectionWrapper) => D3SelectionWrapper | undefined,
+    exit?: (elem: D3SelectionWrapper) => void): D3SelectionWrapper {
 
     let updateWrapper: (elem: D3Selection) => D3Selection;
     let exitWrapper: (elem: D3Selection) => void;
@@ -89,7 +93,7 @@ export class D3SelectionTest {
     if (update) {
       updateWrapper = (elem: D3Selection) => {
         /* Changing the paramter type for the API */
-        const result = update(new D3SelectionTest(elem))
+        const result = update(new D3SelectionWrapper(elem))
 
         /* Changing the return type for the d3-join-api */
         return result.getSelection();
@@ -97,10 +101,10 @@ export class D3SelectionTest {
     }
 
     if (exit) {
-      exitWrapper = (elem: D3Selection) => exit(new D3SelectionTest(elem));
+      exitWrapper = (elem: D3Selection) => exit(new D3SelectionWrapper(elem));
     }
 
-    return new D3SelectionTest(this.selection.join(enter as any, updateWrapper, exitWrapper));
+    return new D3SelectionWrapper(this.selection.join(enter as any, updateWrapper, exitWrapper));
   }
 
   public remove(): this {
@@ -108,8 +112,8 @@ export class D3SelectionTest {
     return this;
   }
 
-  public clone(deep?: boolean): D3SelectionTest {
-    return new D3SelectionTest(this.selection.clone(deep));
+  public clone(deep?: boolean): D3SelectionWrapper {
+    return new D3SelectionWrapper(this.selection.clone(deep));
   }
 
   public lower(): this {
@@ -117,28 +121,28 @@ export class D3SelectionTest {
     return this;
   }
 
-  public selectFirstRect(): D3SelectionTest {
+  public selectFirstRect(): D3SelectionWrapper {
     return this.select(D3SelectionType.RECT);
   }
 
-  public selectFirstText(): D3SelectionTest {
+  public selectFirstText(): D3SelectionWrapper {
     return this.select(D3SelectionType.TEXT);
   }
 
-  public selectFirstPath(): D3SelectionTest {
+  public selectFirstPath(): D3SelectionWrapper {
     return this.select(D3SelectionType.PATH);
   }
 
-  public selectById(id: string): D3SelectionTest {
-    return new D3SelectionTest(this.selection.select(`#${id}`));
+  public selectById(id: string): D3SelectionWrapper {
+    return new D3SelectionWrapper(this.selection.select(`#${id}`));
   }
 
-  public select(selector: string | d3.ValueFn<any, any, any> | null): D3SelectionTest {
-    return new D3SelectionTest(this.selection.select(selector as any));
+  public select(selector: string | d3.ValueFn<any, any, any> | null): D3SelectionWrapper {
+    return new D3SelectionWrapper(this.selection.select(selector as any));
   }
 
-  public selectAll(selector: string | d3.ValueFn<any, any, any[] | ArrayLike<any>> | null): D3SelectionTest {
-    return new D3SelectionTest(this.selection.selectAll(selector as any));
+  public selectAll(selector: string | d3.ValueFn<any, any, any[] | ArrayLike<any>> | null): D3SelectionWrapper {
+    return new D3SelectionWrapper(this.selection.selectAll(selector as any));
   }
 
   public empty(): boolean {
@@ -250,13 +254,13 @@ export class D3SelectionTest {
    */
   public centerTextInRect(size?: { rectWidth: number, rectHeight: number }): this {
     return this
-      .x(data => (size && size.rectWidth ? size.rectWidth : data.width) / 2)
-      .y(data => (size && size.rectHeight ? size.rectHeight : data.height) / 2)
+      .x(node => (size && size.rectWidth ? size.rectWidth : node.data.width) / 2)
+      .y(node => (size && size.rectHeight ? size.rectHeight : node.data.height) / 2)
       .dominantBaseline('middle')
       .textAnchor("middle");
   }
 
-  public appendBackgroundColorRect(color: string): D3SelectionTest {
+  public appendBackgroundColorRect(color: string): D3SelectionWrapper {
     return this
       .appendRect()
       .width('100%')
@@ -296,7 +300,6 @@ export class D3SelectionTest {
     this.selection.text(text as any);
     return this;
   }
-
 
   public dominantBaseline(value: D3AttributeValue): this {
     return this.attr('dominant-baseline', value);
@@ -346,48 +349,48 @@ export class D3SelectionTest {
     return this;
   }
 
-  public appendSVG(): D3SelectionTest {
+  public appendSVG(): D3SelectionWrapper {
     return this.append(D3SelectionType.SVG);
   }
 
-  public appendGroup(): D3SelectionTest {
+  public appendGroup(): D3SelectionWrapper {
     return this.append(D3SelectionType.GROUP);
   }
 
-  public appendRect(): D3SelectionTest {
+  public appendRect(): D3SelectionWrapper {
     return this.append(D3SelectionType.RECT);
   }
 
-  public appendCircle(): D3SelectionTest {
+  public appendCircle(): D3SelectionWrapper {
     return this.append(D3SelectionType.CIRCLE);
   }
 
-  public appendText(): D3SelectionTest {
+  public appendText(): D3SelectionWrapper {
     return this.append(D3SelectionType.TEXT);
   }
 
-  public appendPath(): D3SelectionTest {
+  public appendPath(): D3SelectionWrapper {
     return this.append(D3SelectionType.PATH);
   }
 
-  public appendUse(): D3SelectionTest {
+  public appendUse(): D3SelectionWrapper {
     return this.append(D3SelectionType.USE);
   }
 
-  public appendDefs(): D3SelectionTest {
+  public appendDefs(): D3SelectionWrapper {
     return this.append(D3SelectionType.DEFS);
   }
 
-  private append(type: D3SelectionType): D3SelectionTest {
-    return new D3SelectionTest(this.selection.append(type));
+  private append(type: D3SelectionType): D3SelectionWrapper {
+    return new D3SelectionWrapper(this.selection.append(type));
   }
 
-  public static select(selector: string | d3.ValueFn<any, any, any> | null): D3SelectionTest {
-    return new D3SelectionTest(d3.select(selector as any));
+  public static select(selector: string | d3.ValueFn<any, any, any> | null): D3SelectionWrapper {
+    return new D3SelectionWrapper(d3.select(selector as any));
   }
 
-  public static selectAll(selector: string | d3.ValueFn<any, any, any[] | ArrayLike<any>> | null): D3SelectionTest {
-    return new D3SelectionTest(d3.selectAll(selector as any));
+  public static selectAll(selector: string | d3.ValueFn<any, any, any[] | ArrayLike<any>> | null): D3SelectionWrapper {
+    return new D3SelectionWrapper(d3.selectAll(selector as any));
   }
 }
 

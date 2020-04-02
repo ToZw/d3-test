@@ -1,6 +1,9 @@
 import * as d3 from "d3";
-import { D3SelectionTest, D3SelectionType, D3Selection } from './d3-selection-test';
-import { D3TreeNodeFactory } from './node-models/d3-tree-node.factory';
+import { D3SelectionWrapper, D3SelectionType } from './d3-selection.wrapper';
+import { D3NodeModelFactory } from './node-models/d3-node-model.factory';
+import { NodeModelType } from './node-models/node.model';
+import { TargetTreeNodeModel } from './node-models/tree-node-models/target-tree-node.model';
+import { TestoTreeNodeModel } from './node-models/tree-node-models/testo-tree-node.model';
 
 export class D3TreeWrapper {
 
@@ -8,17 +11,17 @@ export class D3TreeWrapper {
 
   private chartConfig: any;
 
-  private parentSelection: D3SelectionTest;
+  private parentSelection: D3SelectionWrapper;
 
-  private treeGroup: D3SelectionTest;
+  private treeGroup: D3SelectionWrapper;
 
-  private linkGroup: D3SelectionTest;
+  private linkGroup: D3SelectionWrapper;
 
-  private nodeGroup: D3SelectionTest;
+  private nodeGroup: D3SelectionWrapper;
 
   private treeRootNode: d3.HierarchyPointNode<any>;
 
-  public constructor(parentSelection: D3SelectionTest, chartData: any, chartConfig: { marginLeft: number }) {
+  public constructor(parentSelection: D3SelectionWrapper, chartData: any, chartConfig: { marginLeft: number }) {
     this.parentSelection = parentSelection;
     this.chartData = chartData;
     this.chartConfig = chartConfig;
@@ -37,14 +40,26 @@ export class D3TreeWrapper {
       .fontSize(10)
       .transform(`translate(${this.chartConfig.marginLeft}, 0)`);
 
+    this.linkGroup = this.treeGroup
+      .appendGroup()
+      .fill("none")
+      .stroke("#555")
+      .strokeOpacity(0.4)
+      .strokeWidth(1.5)
+      .id('links');
+
+    this.nodeGroup = this.treeGroup
+      .appendGroup()
+      .id('targets');
+
     this.updateTree();
   }
 
   private updateTree(): void {
     this.treeRootNode = this.getTreeFromData(this.chartData);
 
-    this.createLinks();
-    this.createNodes();
+    this.updateLinks();
+    this.updateNodes();
   }
 
   private getTreeFromData(data: any): d3.HierarchyPointNode<any> {
@@ -54,17 +69,7 @@ export class D3TreeWrapper {
     return treemap(nodes);
   }
 
-  private createLinks(): void {
-    if (!this.linkGroup) {
-      this.linkGroup = this.treeGroup
-        .appendGroup()
-        .fill("none")
-        .stroke("#555")
-        .strokeOpacity(0.4)
-        .strokeWidth(1.5)
-        .id('links');
-    }
-
+  private updateLinks(): void {
     this.linkGroup
       .selectAll(D3SelectionType.PATH)
       .data<d3.HierarchyPointLink<any>>(this.treeRootNode.links(), link => link.source.data.id + '_' + link.target.data.id)
@@ -83,14 +88,11 @@ export class D3TreeWrapper {
     //   .text(link => link.source.data.id + ' => ' + link.target.data.id);
   }
 
-  private createNodes(): void {
-    if (!this.nodeGroup) {
-      this.nodeGroup = this.treeGroup
-        .appendGroup()
-        .id('targets');
-    }
+  private updateNodes() {
+    const descendants: d3.HierarchyPointNode<any>[] = this.treeRootNode.descendants();
 
-    D3TreeNodeFactory.create(this, this.nodeGroup, this.treeRootNode.descendants());
+    D3NodeModelFactory.create(this.nodeGroup, descendants.filter(node => node.data.type === NodeModelType.TARGET), new TargetTreeNodeModel(this));
+    D3NodeModelFactory.create(this.nodeGroup, descendants.filter(node => node.data.type === NodeModelType.TESTO), new TestoTreeNodeModel(this));
   }
 
   public addNode(node: d3.HierarchyPointNode<any>, newChild: any) {

@@ -1,15 +1,26 @@
 import * as d3 from "d3";
-import { D3SelectionTest } from '../d3-selection-test';
-import { D3TreeWrapper } from '../d3-tree.wrapper';
-import { AbstractNodeModel } from './node.model';
+import { D3SelectionWrapper } from '../../d3-selection.wrapper';
+import { D3TreeWrapper } from '../../d3-tree.wrapper';
+import { NodeModelType } from '../node.model';
 import { DnDModuleType } from 'src/app/d3-chart/d3-chart.component';
+import { AbstractTreeNodeModel } from './abstract-tree-node.model';
 
-export class DnDTestoNodeModel extends AbstractNodeModel {
+export class TestoTreeNodeModel extends AbstractTreeNodeModel {
+
+  public readonly type: NodeModelType = NodeModelType.TESTO;
 
   protected readonly defaultSize: number = 100;
 
-  public createNodes(d3TreeWrapper: D3TreeWrapper, nodeGroups: D3SelectionTest): void {
-    const newGroups: D3SelectionTest = this.prepare(d3TreeWrapper, nodeGroups);
+  public constructor(private d3TreeWrapper: D3TreeWrapper) {
+    super();
+
+    if (!this.d3TreeWrapper) {
+      throw new Error(`The parameter 'd3TreeWrapper' is required!, ${this.d3TreeWrapper}`);
+    }
+  }
+
+  public createNodes(nodeGroups: D3SelectionWrapper): void {
+    const newGroups: D3SelectionWrapper = this.prepare(nodeGroups);
 
     newGroups
       .appendRect()
@@ -38,7 +49,7 @@ export class DnDTestoNodeModel extends AbstractNodeModel {
       .onClick((node: d3.HierarchyPointNode<any>) => {
         const newId = this.createChildId(node);
 
-        d3TreeWrapper.addNode(
+        this.d3TreeWrapper.addNode(
           node,
           {
             type: 'testo',
