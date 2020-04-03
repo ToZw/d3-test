@@ -1,10 +1,9 @@
 import * as d3 from "d3";
+export class D3SelectionWrapper<GElement extends d3.BaseType = any, Datum = any, PElement extends d3.BaseType = any, PDatum = any> {
 
-export class D3SelectionWrapper {
+  protected selection: D3Selection<GElement, Datum, PElement, PDatum>;
 
-  protected selection: D3Selection;
-
-  public constructor(selection: D3Selection) {
+  public constructor(selection: D3Selection<GElement, Datum, PElement, PDatum>) {
     if (!selection) {
       throw new Error(`The parameter 'selection' is required!, ${selection}`);
     }
@@ -28,15 +27,15 @@ export class D3SelectionWrapper {
     return this.attr('transform', transform);
   }
 
-  public getDatum(): any {
+  public getDatum(): Datum {
     return this.selection.datum();
   }
 
-  public datum<NEWDATA>(datum: NEWDATA): D3SelectionWrapper {
-    return new D3SelectionWrapper(this.selection.datum<NEWDATA>(datum));
+  public datum<NewDatum>(datum: NewDatum): D3SelectionWrapper<GElement, NewDatum, PElement, PDatum> {
+    return new D3SelectionWrapper<GElement, NewDatum, PElement, PDatum>(this.selection.datum<NewDatum>(datum));
   }
 
-  public getData(): any[] {
+  public getData(): Datum[] {
     return this.selection.data();
   }
 
@@ -45,28 +44,31 @@ export class D3SelectionWrapper {
    * The parameter 'key' is required, because otherwise strange bugs can appear, if the key isn't present and d3-data can't
    * distinguish between the data.
    */
-  public data<NEWDATA>(data: NEWDATA[] | d3.ValueFn<any, any, NEWDATA[]>, key: d3.ValueFn<any, any, string>): D3SelectionWrapper {
-    return new D3SelectionWrapper(this.selection.data<NEWDATA>(data as any, key));
+  public data<NewDatum>(
+    data: NewDatum[] | d3.ValueFn<PElement, PDatum, NewDatum[]>,
+    key: d3.ValueFn<GElement | PElement, Datum | NewDatum, string>): D3SelectionWrapper<GElement, NewDatum, PElement, PDatum> {
+
+    return new D3SelectionWrapper<GElement, NewDatum, PElement, PDatum>(this.selection.data<NewDatum>(data as any, key));
   }
 
-  public filter(filter: D3AttributeValue): D3SelectionWrapper {
-    return new D3SelectionWrapper(this.selection.filter(filter as any));
+  public filter(filter: D3AttributeValue): D3SelectionWrapper<GElement, Datum, PElement, PDatum> {
+    return new D3SelectionWrapper<GElement, Datum, PElement, PDatum>(this.selection.filter(filter as any));
   }
 
-  public filterEmptyGroups(): D3SelectionWrapper {
-    return this.filter((nodeGroup: d3.HierarchyPointNode<any>, index: number, nodes: SVGGElement[]) => nodes[index].children.length === 0);
+  public filterEmptyGroups(): D3SelectionWrapper<GElement, Datum, PElement, PDatum> {
+    return this.filter((nodeGroup: Datum, index: number, nodes: SVGGElement[]) => nodes[index].children.length === 0);
   }
 
-  public merge(other: D3SelectionWrapper): D3SelectionWrapper {
-    return new D3SelectionWrapper(this.selection.merge(other.getSelection()));
+  public merge(other: D3SelectionWrapper<GElement, Datum, PElement, PDatum>): D3SelectionWrapper<GElement, Datum, PElement, PDatum> {
+    return new D3SelectionWrapper<GElement, Datum, PElement, PDatum>(this.selection.merge(other.getSelection()));
   }
 
-  public enter(): D3SelectionWrapper {
-    return new D3SelectionWrapper(this.selection.enter());
+  public enter(): D3SelectionWrapper<d3.EnterElement, Datum, PElement, PDatum> {
+    return new D3SelectionWrapper<d3.EnterElement, Datum, PElement, PDatum>(this.selection.enter());
   }
 
-  public exit<OldDatum>(): D3SelectionWrapper {
-    return new D3SelectionWrapper(this.selection.exit<OldDatum>());
+  public exit<OldDatum>(): D3SelectionWrapper<GElement, OldDatum, PElement, PDatum> {
+    return new D3SelectionWrapper<GElement, OldDatum, PElement, PDatum>(this.selection.exit<OldDatum>());
   }
 
   /**
@@ -112,8 +114,8 @@ export class D3SelectionWrapper {
     return this;
   }
 
-  public clone(deep?: boolean): D3SelectionWrapper {
-    return new D3SelectionWrapper(this.selection.clone(deep));
+  public clone(deep?: boolean): D3SelectionWrapper<GElement, Datum, PElement, PDatum> {
+    return new D3SelectionWrapper<GElement, Datum, PElement, PDatum>(this.selection.clone(deep));
   }
 
   public lower(): this {
@@ -137,12 +139,12 @@ export class D3SelectionWrapper {
     return new D3SelectionWrapper(this.selection.select(`#${id}`));
   }
 
-  public select(selector: string | d3.ValueFn<any, any, any> | null): D3SelectionWrapper {
-    return new D3SelectionWrapper(this.selection.select(selector as any));
+  public select<DescElement extends d3.BaseType>(selector: string | d3.ValueFn<GElement, Datum, DescElement> | null): D3SelectionWrapper<DescElement | null, Datum | undefined, PElement, PDatum> {
+    return new D3SelectionWrapper<DescElement | null, Datum | undefined, PElement, PDatum>(this.selection.select<DescElement>(selector as any));
   }
 
-  public selectAll(selector: string | d3.ValueFn<any, any, any[] | ArrayLike<any>> | null): D3SelectionWrapper {
-    return new D3SelectionWrapper(this.selection.selectAll(selector as any));
+  public selectAll<DescElement extends d3.BaseType, OldDatum>(selector: string | d3.ValueFn<GElement, Datum, DescElement[] | ArrayLike<DescElement>> | null): D3SelectionWrapper<DescElement | null, OldDatum | undefined, GElement, Datum> {
+    return new D3SelectionWrapper<DescElement | null, OldDatum | undefined, GElement, Datum>(this.selection.selectAll<DescElement, OldDatum>(selector as any));
   }
 
   public empty(): boolean {
@@ -165,14 +167,14 @@ export class D3SelectionWrapper {
   /**
    * Return the first (non-null) element in this selection. If the selection is empty, returns null.
    */
-  node(): any | null {
+  node(): GElement | null {
     return this.selection.node();
   }
 
   /**
    * Return an array of all (non-null) elements in this selection.
    */
-  nodes(): any[] {
+  nodes(): GElement[] {
     return this.selection.nodes();
   }
 
@@ -381,8 +383,11 @@ export class D3SelectionWrapper {
     return this.append(D3SelectionType.DEFS);
   }
 
-  private append(type: D3SelectionType): D3SelectionWrapper {
-    return new D3SelectionWrapper(this.selection.append(type));
+  /**
+   * Missing Generics compares to d3-append.
+   */
+  private append<K extends keyof ElementTagNameMap>(type: K): D3SelectionWrapper<ElementTagNameMap[K], Datum, PElement, PDatum> {
+    return new D3SelectionWrapper<ElementTagNameMap[K], Datum, PElement, PDatum>(this.selection.append<K>(type));
   }
 
   public static select(selector: string | d3.ValueFn<any, any, any> | null): D3SelectionWrapper {
@@ -394,9 +399,9 @@ export class D3SelectionWrapper {
   }
 }
 
-export type D3Selection<DATA = any> = d3.Selection<d3.EnterElement | d3.ContainerElement, DATA, d3.BaseType, any>;
+export type D3Selection<GElement extends d3.BaseType = any, Datum = any, PElement extends d3.BaseType = any, PDatum = any> = d3.Selection<GElement, Datum, PElement, PDatum>;
 
-export type D3AttributeValue<DATA = any> = d3.ValueFn<any, DATA, string | number | boolean | null> | string | number | boolean | Array<any> | null;
+export type D3AttributeValue<GElement extends d3.BaseType = any, Datum = any> = d3.ValueFn<GElement, Datum, string | number | boolean | null> | string | number | boolean | Array<any> | null;
 
 export enum D3SelectionType {
   SVG = 'svg',

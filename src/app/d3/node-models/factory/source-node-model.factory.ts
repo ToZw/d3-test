@@ -1,21 +1,22 @@
 import * as d3 from "d3";
-import { D3SelectionWrapper } from '../d3-selection.wrapper';
-import { NodeModelType, NodeModel } from './node.model';
-import { D3DraggingHandler } from 'src/app/drag-and-drop/d3-drag-and-drop-handler';
+import { D3SelectionWrapper } from '../../d3-wrappers/d3-selection.wrapper';
+import { NodeModelType, NodeModelFactory } from '../models/node.model';
+import { D3DraggingHandler } from 'src/app/d3/d3-drag-and-drop/d3-drag-and-drop-handler';
+import { ChartSourceNodeModel } from '../models/chart-source-node.model';
 
-export class SourceNodeModel implements NodeModel {
+export class SourceNodeModel implements NodeModelFactory {
 
   public readonly type: NodeModelType = NodeModelType.SOURCE;
 
-  public constructor(private draggingHandler?: D3DraggingHandler<any>) {
+  public constructor(private draggingHandler?: D3DraggingHandler<ChartSourceNodeModel>) {
   }
 
-  public createNodes(nodeGroups: D3SelectionWrapper): void {
+  public createNodes(nodeGroups: D3SelectionWrapper<d3.BaseType, ChartSourceNodeModel, d3.BaseType, ChartSourceNodeModel>): void {
     if (!nodeGroups) {
       throw new Error(`The parameter 'nodeGroups' is required!, ${nodeGroups}`);
     }
 
-    nodeGroups.transform((node: d3.HierarchyPointNode<any>) => `translate(${node.x}, ${node.y})`);
+    nodeGroups.transform((node: ChartSourceNodeModel) => `translate(${node.x}, ${node.y})`);
 
     /* Filter all new groups, so old groups won't be appended multiple times */
     const newGroups: D3SelectionWrapper = nodeGroups.filterEmptyGroups();

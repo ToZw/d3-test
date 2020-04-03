@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 import { Component, OnInit, Input } from '@angular/core';
-import { D3SelectionWrapper, D3SelectionType } from '../d3-wrappers/d3-selection.wrapper';
+import { D3SelectionWrapper, D3SelectionType } from '../d3/d3-wrappers/d3-selection.wrapper';
 
 @Component({
   selector: 'app-d3-chart',
@@ -17,12 +17,6 @@ export class D3ChartComponent implements OnInit {
     { type: DnDModuleType.DND_TARGET, id: 'target_2', x: 400, y: 10, width: 100, height: 100 },
     { type: DnDModuleType.DND_TARGET, id: 'target_3', x: 600, y: 10, width: 100, height: 100 },
   ];
-
-  @Input()
-  public links: D3Link[] = [
-    { id: 'link_1', sourceId: 'target_1', targetId: 'target_2' },
-    { id: 'link_2', sourceId: 'target_2', targetId: 'target_3' }
-  ]
 
   private svgContainer: D3SelectionWrapper;
 
@@ -65,7 +59,7 @@ export class D3ChartComponent implements OnInit {
   private initGroups(): D3SelectionWrapper {
     return this.svgContainer
       .selectAll(D3SelectionType.GROUP)
-      .data<DnDModule>(this.modules, module => module.id)
+      .data<DnDModule>(this.modules, (module: any) => module.id)
       .enter()
       .appendGroup()
       .transform((data) => `translate(${data.x}, ${data.y})`)
@@ -251,14 +245,8 @@ export interface DnDModule {
   y: number;
   width: number;
   height: number;
-  linkIds?: string[];
 }
 
-export interface D3Link {
-  id: string;
-  sourceId: string;
-  targetId: string;
-}
 
 export interface DnDSourceModule extends DnDModule {
   type: DnDModuleType.DND_SOURCE;

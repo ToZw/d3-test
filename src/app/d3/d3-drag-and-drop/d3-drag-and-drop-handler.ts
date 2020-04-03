@@ -1,15 +1,16 @@
 import * as d3 from "d3";
-import { D3SelectionWrapper } from 'src/app/d3-wrappers/d3-selection.wrapper';
-import { DnDModuleType } from '../d3-chart/d3-chart.component';
-import { NodeModel } from 'src/app/d3-wrappers/node-models/node.model';
+import { DnDModuleType } from '../../d3-chart/d3-chart.component';
+import { D3SelectionWrapper } from '../d3-wrappers/d3-selection.wrapper';
+import { NodeModelFactory, NodeModelProperties } from '../node-models/models/node.model';
+import { ChartConfig } from '../models/chart-config';
 
-export interface D3DraggingHandler<DATA> {
-  onDraggingStart: d3.ValueFn<any, DATA, void>;
-  onDragging: d3.ValueFn<any, DATA, void>;
-  onDraggingEnd: d3.ValueFn<any, DATA, void>;
+export interface D3DraggingHandler<DataNode extends NodeModelProperties> {
+  onDraggingStart: d3.ValueFn<d3.BaseType, DataNode, void>;
+  onDragging: d3.ValueFn<d3.BaseType, DataNode, void>;
+  onDraggingEnd: d3.ValueFn<d3.BaseType, DataNode, void>;
 }
 
-export class SimpleD3DraggingHandler implements D3DraggingHandler<any>{
+export class SimpleD3DraggingHandler<DataNode extends NodeModelProperties = NodeModelProperties> implements D3DraggingHandler<DataNode>{
 
   private currentDragSelection: D3SelectionWrapper;
 
@@ -17,20 +18,20 @@ export class SimpleD3DraggingHandler implements D3DraggingHandler<any>{
 
   public constructor(
     private parentSelection: D3SelectionWrapper,
-    private chartConfig: { marginLeft: number },
-    private getSources: () => any[],
-    private nodeModel: NodeModel) {
+    private chartConfig: ChartConfig,
+    private getTargetNodes: () => any[],
+    private nodeModel: NodeModelFactory) {
   }
 
-  public onDraggingStart(node: any) {
+  public onDraggingStart(node: DataNode) {
     this.currentDragSelection = this.parentSelection
       .appendGroup()
-      .datum<any>(node);
+      .datum<DataNode>(node);
 
     this.nodeModel.createNodes(this.currentDragSelection);
   }
 
-  public onDragging(draggedNode: any) {
+  public onDragging(draggedNode: DataNode) {
     this.currentDragSelection.transform((node) => `translate(${0}, ${0}), translate(${d3.event.x}, ${d3.event.y})`);
 
     // if (this.draggingTimeout) {
@@ -60,13 +61,13 @@ export class SimpleD3DraggingHandler implements D3DraggingHandler<any>{
       .stroke('red');
   }
 
-  private findHoveredTargetModule(node: any): D3SelectionWrapper | null {
-    const targetNodes: any[]
-      = this.getSources()
-        .filter(module => module.data.dndType === DnDModuleType.DND_TARGET)
+  private findHoveredTargetModule(node: DataNode): D3SelectionWrapper<d3.BaseType, DataNode, d3.BaseType, DataNode> | null {
+    const targetNodes: DataNode[]
+      = this.getTargetNodes()
+        .filter(targetNode => targetNode.data.dndType === DnDModuleType.DND_TARGET)
         .filter(
-          module => {
-            const moduleHalfHeight: number = module.data.height / 2;
+          targetNode => {
+            const moduleHalfHeight: number = targetNode.data.height / 2;
             const draggingModule = {
               top: d3.event.y,
               left: d3.event.x - this.chartConfig.marginLeft,
@@ -74,10 +75,10 @@ export class SimpleD3DraggingHandler implements D3DraggingHandler<any>{
               bottom: d3.event.y + node.data.height
             };
             const targetModule = {
-              top: module.x - moduleHalfHeight,
-              left: module.y,
-              right: module.y + module.data.width,
-              bottom: module.x + moduleHalfHeight
+              top: targetNode.x - moduleHalfHeight,
+              left: targetNode.y,
+              right: targetNode.y + targetNode.data.width,
+              bottom: targetNode.x + moduleHalfHeight
             };
 
             return this.isIntersection(targetModule, draggingModule);
@@ -97,7 +98,7 @@ export class SimpleD3DraggingHandler implements D3DraggingHandler<any>{
       second.bottom < first.top);
   }
 
-  public onDraggingEnd(draggedNode: any) {
+  public onDraggingEnd(draggedNode: DataNode) {
     if (this.hoveredTargetSelection) {
       this.hoveredTargetSelection
         .selectFirstRect()
@@ -105,7 +106,7 @@ export class SimpleD3DraggingHandler implements D3DraggingHandler<any>{
       this.hoveredTargetSelection = null;
     }
 
-    const targetSelection = this.findHoveredTargetModule(draggedNode);
+    const targetSelection: D3SelectionWrapper<d3.BaseType, DataNode, d3.BaseType, DataNode> = this.findHoveredTargetModule(draggedNode);
 
     if (!targetSelection) {
       this.currentDragSelection.remove();
@@ -116,7 +117,7 @@ export class SimpleD3DraggingHandler implements D3DraggingHandler<any>{
     /* update group*/
     targetSelection.transform(node => `translate(${node.y}, ${node.x - draggedNode.data.height / 2})`);
 
-    const targetNode: d3.HierarchyPointNode<any> = targetSelection.getDatum();
+    const targetNode: DataNode = targetSelection.getDatum();
 
     targetNode.data.width = draggedNode.data.width;
     targetNode.data.height = draggedNode.data.height;

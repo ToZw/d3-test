@@ -1,12 +1,13 @@
 import * as d3 from "d3";
 import { Component, OnInit, Input } from '@angular/core';
 import { treeData } from './example.json';
-import { D3SelectionWrapper } from '../d3-wrappers/d3-selection.wrapper';
-import { DnDSourceModule } from '../d3-chart/d3-chart.component';
-import { D3TreeWrapper } from '../d3-wrappers/d3-tree.wrapper';
-import { D3NodeModelFactory } from '../d3-wrappers/node-models/d3-node-model.factory';
-import { SourceNodeModel } from '../d3-wrappers/node-models/source-node.model';
-import { SimpleD3DraggingHandler } from '../drag-and-drop/d3-drag-and-drop-handler';
+import { SimpleD3DraggingHandler } from '../d3/d3-drag-and-drop/d3-drag-and-drop-handler';
+import { D3SelectionWrapper } from '../d3/d3-wrappers/d3-selection.wrapper';
+import { D3TreeWrapper } from '../d3/d3-wrappers/d3-tree.wrapper';
+import { SourceNodeModel } from '../d3/node-models/factory/source-node-model.factory';
+import { NodeModelGroupFactory } from '../d3/node-models/factory/node-model-group.factory';
+import { ChartConfig } from '../d3/models/chart-config';
+import { ChartSourceNodeModel } from '../d3/node-models/models/chart-source-node.model';
 
 @Component({
   selector: 'app-d3-tree-chart',
@@ -16,13 +17,13 @@ import { SimpleD3DraggingHandler } from '../drag-and-drop/d3-drag-and-drop-handl
 export class D3TreeChartComponent implements OnInit {
 
   @Input()
-  public chartSources: any[] = treeData.sources;
+  public chartSources: ChartSourceNodeModel[] = treeData.sources;
 
   @Input()
   public chartData: any = treeData.tree;
 
   @Input()
-  private chartConfig: { marginLeft: number } = { marginLeft: 300 };
+  private chartConfig: ChartConfig = { marginLeft: 300 };
 
   private svgContainer: D3SelectionWrapper;
 
@@ -43,24 +44,24 @@ export class D3TreeChartComponent implements OnInit {
     this.rootGroup = this.svgContainer.appendGroup();
 
     this.d3TreeWrapper = new D3TreeWrapper(this.rootGroup, this.chartData, this.chartConfig);
+    this.updateSourcesCoordinates(this.chartSources);
     this.createDnDSources(this.chartSources);
   }
 
-  private createDnDSources(sources: DnDSourceModule[]): void {
+  private createDnDSources(sources: ChartSourceNodeModel[]): void {
     const dragAndDropHandler: SimpleD3DraggingHandler = new SimpleD3DraggingHandler(
       this.rootGroup,
       this.chartConfig,
       () => this.d3TreeWrapper.getTreeRoot().descendants(),
       new SourceNodeModel())
 
-    this.updateSourcesCoordinates(this.chartSources);
-    D3NodeModelFactory.create(this.rootGroup, sources as any, new SourceNodeModel(dragAndDropHandler));
+    NodeModelGroupFactory.create<ChartSourceNodeModel>(this.rootGroup, sources, new SourceNodeModel(dragAndDropHandler));
   }
 
   public appendNewSources() {
     const length: number = this.getRandomInt(this.chartSources.length);
     const indices: number[] = Array.apply(this, Array(length)).map(() => this.getRandomInt(this.chartSources.length - 1))
-    const filteredSources: any[] = this.chartSources.filter((source: any, index: number) => indices.includes(index));
+    const filteredSources: ChartSourceNodeModel[] = this.chartSources.filter((source: any, index: number) => indices.includes(index));
 
     this.updateSourcesCoordinates(filteredSources);
     this.createDnDSources(filteredSources);
@@ -71,7 +72,7 @@ export class D3TreeChartComponent implements OnInit {
     return result !== 0 ? result : 1;
   }
 
-  private updateSourcesCoordinates(sources: any[]): void {
-    sources.forEach((source: any, index: number) => source.y = index * 100 + 100);
+  private updateSourcesCoordinates(sources: ChartSourceNodeModel[]): void {
+    sources.forEach((source: ChartSourceNodeModel, index: number) => source.y = index * 100 + 100);
   }
 }

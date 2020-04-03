@@ -1,7 +1,7 @@
-import { NodeModel, NodeModelType } from '../node.model';
-import { D3SelectionWrapper } from '../../d3-selection.wrapper';
+import { NodeModelFactory, NodeModelType } from '../../models/node.model';
+import { D3SelectionWrapper } from '../../../d3-wrappers/d3-selection.wrapper';
 
-export abstract class AbstractTreeNodeModel implements NodeModel {
+export abstract class AbstractTreeNodeModelFactory implements NodeModelFactory {
 
   public abstract readonly type: NodeModelType;
 

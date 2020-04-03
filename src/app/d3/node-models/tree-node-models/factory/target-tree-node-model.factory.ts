@@ -1,11 +1,11 @@
 import * as d3 from "d3";
-import { D3SelectionWrapper } from '../../d3-selection.wrapper';
-import { D3TreeWrapper } from '../../d3-tree.wrapper';
-import { NodeModelType } from '../node.model';
+import { D3SelectionWrapper } from '../../../d3-wrappers/d3-selection.wrapper';
+import { D3TreeWrapper } from '../../../d3-wrappers/d3-tree.wrapper';
+import { NodeModelType } from '../../models/node.model';
 import { DnDModuleType } from 'src/app/d3-chart/d3-chart.component';
-import { AbstractTreeNodeModel } from './abstract-tree-node.model';
+import { AbstractTreeNodeModelFactory } from './abstract-tree-node-model.factory';
 
-export class TargetTreeNodeModel extends AbstractTreeNodeModel {
+export class TargetTreeNodeModelFactory extends AbstractTreeNodeModelFactory {
 
   public readonly type: NodeModelType = NodeModelType.TARGET;
 
