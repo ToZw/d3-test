@@ -1,4 +1,4 @@
-import { NodeModelFactoryPreparer, NodeModelSize } from '../../models/node.model';
+import { NodeModelFactoryPreparer, NodeModelSize, NodeModelType } from '../../models/node.model';
 import { D3SelectionWrapper } from '../../../d3-wrappers/d3-selection.wrapper';
 
 export class TreeNodeModelFactoryPreparer implements NodeModelFactoryPreparer {
@@ -12,9 +12,14 @@ export class TreeNodeModelFactoryPreparer implements NodeModelFactoryPreparer {
     }
 
     nodeGroups.transform((node: d3.HierarchyPointNode<any>) => {
-      const halfHeight: number = (node.data.height ? node.data.height : defaultSize.height) / 2;
+      switch (node.data.type) {
+        case NodeModelType.SECOND_SOURCE:
+          return `translate(${node.y}, ${node.x})`;
+        default:
+          const halfHeight: number = (node.data.height ? node.data.height : defaultSize.height) / 2;
 
-      return `translate(${node.y}, ${node.x - halfHeight})`
+          return `translate(${node.y}, ${node.x - halfHeight})`
+      }
     });
 
     /* Filter all new groups, so old groups won't be appended multiple times */

@@ -8,7 +8,7 @@ import { SourceNodeModelFactory } from '../d3/node-models/factory/source-node-mo
 import { NodeModelGroupFactory } from '../d3/node-models/factory/node-model-group.factory';
 import { ChartConfig } from '../d3/models/chart-config';
 import { ChartSourceNodeModel } from '../d3/node-models/models/chart-source-node.model';
-import { NodeModelType, SimpleNodeModelFactoryPreparer, NodeModelFactory } from '../d3/node-models/models/node.model';
+import { SimpleNodeModelFactoryPreparer, NodeModelFactory } from '../d3/node-models/models/node.model';
 import { SecondSourceNodeModelFactory } from '../d3/node-models/factory/second-source-node-model.factory';
 
 @Component({
@@ -42,7 +42,7 @@ export class D3TreeChartComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.svgContainer = D3SelectionWrapper.select('#tree-chart')
+    this.svgContainer = D3SelectionWrapper.selectById('tree-chart')
       .appendSVG()
       .width(1500)
       .height(1500)

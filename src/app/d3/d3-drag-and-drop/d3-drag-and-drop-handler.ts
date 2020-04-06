@@ -71,7 +71,7 @@ export class SimpleD3DraggingHandler<DataNode extends NodeModelProperties = Node
       return null;
     }
 
-    return this.parentSelection.select(`#${targetNodes[0].data.id}`);
+    return this.parentSelection.selectById(targetNodes[0].data.id);
   }
 
   private getDraggingNodeSize(draggingNode: DataNode): { top: number; left: number; right: number; bottom: number } {
@@ -158,16 +158,18 @@ export class SimpleD3DraggingHandler<DataNode extends NodeModelProperties = Node
 
     targetSelection.removeChildren();
     this.nodeModel.createNodes(targetSelection);
-    targetSelection
+
+    const appendedNode = targetSelection
       .type(draggedNodeData.type)
-      .appendSelection(addNodePathNode)
-      .transform(`translate(${draggedNodeData.width}, 0)`);
+      .appendSelection(addNodePathNode);
 
     switch (draggedNodeData.type) {
       case NodeModelType.SECOND_SOURCE:
+        appendedNode.transform(`translate(${draggedNodeData.width}, ${-draggedNodeData.height / 2})`);
         targetSelection.transform(node => `translate(${node.y}, ${node.x})`);
         break;
       default:
+        appendedNode.transform(`translate(${draggedNodeData.width}, 0)`);
         targetSelection.transform(node => `translate(${node.y}, ${node.x - draggedNodeData.height / 2})`);
     }
 

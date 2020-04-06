@@ -1,4 +1,3 @@
-import * as d3 from "d3";
 import { D3SelectionWrapper } from '../../d3-wrappers/d3-selection.wrapper';
 import { NodeModelType, NodeModelFactoryPreparer, AbstractNodeModelFactory, NodeModelSize } from '../models/node.model';
 

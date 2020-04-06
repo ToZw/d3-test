@@ -31,7 +31,7 @@ export class D3ChartComponent implements OnInit {
 
   ngOnInit() {
     this.svgContainer = D3SelectionWrapper
-      .select('#dnd-chart')
+      .selectById('dnd-chart')
       .appendSVG()
       .width(1500)
       .height(1500);
@@ -158,7 +158,7 @@ export class D3ChartComponent implements OnInit {
       return null;
     }
 
-    return this.svgContainer.select(`#${targetModules[0].id}`);
+    return this.svgContainer.selectById(targetModules[0].id);
   }
 
   private isIntersection(first: { top: number, right: number, bottom: number, left: number }, second: { top: number, right: number, bottom: number, left: number }) {

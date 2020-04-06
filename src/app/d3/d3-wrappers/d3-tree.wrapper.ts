@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 import { D3SelectionWrapper, D3SelectionType } from './d3-selection.wrapper';
 import { NodeModelGroupFactory } from '../node-models/factory/node-model-group.factory';
-import { NodeModelFactory } from '../node-models/models/node.model';
+import { NodeModelFactory, NodeModelType } from '../node-models/models/node.model';
 import { TargetNodeModelFactory } from '../node-models/factory/target-node-model.factory';
 import { TestoNodeModelFactory } from '../node-models/factory/testo-node-model.factory';
 import { ChartConfig } from '../models/chart-config';
@@ -116,13 +116,23 @@ export class D3TreeWrapper {
   }
 
   private appendAddNodePath(newGroups: D3SelectionWrapper, factory: NodeModelFactory): void {
+    let translate: string;
+
+    switch (factory.type) {
+      case NodeModelType.SECOND_SOURCE:
+        translate = `translate(${factory.defaultSize.width}, ${-factory.defaultSize.height / 2})`;
+        break;
+      default:
+        translate = `translate(${factory.defaultSize.width}, 0)`;
+    }
+
     newGroups
       .appendPath()
       .setSymbol(
         d3.symbol()
           .size(300)
           .type(d3.symbolCross))
-      .transform(`translate(${factory.defaultSize.width}, 0)`)
+      .transform(translate)
       .cursor('pointer')
       .classed('add-node-path', true)
       .onClick((node: d3.HierarchyPointNode<any>) => {
