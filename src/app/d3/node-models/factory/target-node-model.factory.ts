@@ -1,11 +1,10 @@
 import * as d3 from "d3";
 import { D3SelectionWrapper } from '../../d3-wrappers/d3-selection.wrapper';
-import { NodeModelType, AbstractNodeModelFactory, NodeModelFactoryPreparer, NodeModelSize } from '../models/node.model';
-import { ChartSourceNodeModel } from '../models/chart-source-node.model';
+import { NodeModelType, NodeModelFactoryPreparer, AbstractNodeModelFactory, NodeModelSize } from '../models/node.model';
 
-export class SourceNodeModelFactory extends AbstractNodeModelFactory {
+export class TargetNodeModelFactory extends AbstractNodeModelFactory {
 
-  public readonly type: NodeModelType = NodeModelType.SOURCE;
+  public readonly type: NodeModelType = NodeModelType.TARGET;
 
   public readonly creationType: NodeModelType = NodeModelType.TARGET;
 
@@ -15,7 +14,7 @@ export class SourceNodeModelFactory extends AbstractNodeModelFactory {
     super(nodeModelFactoryPreparer);
   }
 
-  public createNodes(nodeGroups: D3SelectionWrapper<d3.BaseType, ChartSourceNodeModel, d3.BaseType, ChartSourceNodeModel>): D3SelectionWrapper {
+  public createNodes(nodeGroups: D3SelectionWrapper): D3SelectionWrapper {
     const newGroups: D3SelectionWrapper = super.createNodes(nodeGroups);
 
     newGroups
@@ -24,12 +23,16 @@ export class SourceNodeModelFactory extends AbstractNodeModelFactory {
       .width(this.defaultSize.width)
       .height(this.defaultSize.height)
       .fill('white')
-      .setSolidBorder();
+      .stroke('#2378ae')
+      .strokeDasharray('10,5')
+      .strokeLinecap('butt')
+      .strokeWidth('3');
 
     newGroups
       .appendText()
-      .centerTextInRect()
-      .text((node) => node.data.value);
+      .centerTextInRect(this.defaultSize)
+      // .text('Drag here');
+      .text(node => node.data.id);
 
     return newGroups;
   }

@@ -4,10 +4,12 @@ import { treeData } from './example.json';
 import { SimpleD3DraggingHandler } from '../d3/d3-drag-and-drop/d3-drag-and-drop-handler';
 import { D3SelectionWrapper } from '../d3/d3-wrappers/d3-selection.wrapper';
 import { D3TreeWrapper } from '../d3/d3-wrappers/d3-tree.wrapper';
-import { SourceNodeModel } from '../d3/node-models/factory/source-node-model.factory';
+import { SourceNodeModelFactory } from '../d3/node-models/factory/source-node-model.factory';
 import { NodeModelGroupFactory } from '../d3/node-models/factory/node-model-group.factory';
 import { ChartConfig } from '../d3/models/chart-config';
 import { ChartSourceNodeModel } from '../d3/node-models/models/chart-source-node.model';
+import { NodeModelType, SimpleNodeModelFactoryPreparer, NodeModelFactory } from '../d3/node-models/models/node.model';
+import { SecondSourceNodeModelFactory } from '../d3/node-models/factory/second-source-node-model.factory';
 
 @Component({
   selector: 'app-d3-tree-chart',
@@ -31,6 +33,11 @@ export class D3TreeChartComponent implements OnInit {
 
   private d3TreeWrapper: D3TreeWrapper;
 
+  private nodeModelFactories: NodeModelFactory[] = [
+    new SourceNodeModelFactory(new SimpleNodeModelFactoryPreparer()),
+    new SecondSourceNodeModelFactory(new SimpleNodeModelFactoryPreparer())
+  ];
+
   public constructor() {
   }
 
@@ -49,18 +56,31 @@ export class D3TreeChartComponent implements OnInit {
   }
 
   private createDnDSources(sources: ChartSourceNodeModel[]): void {
-    const dragAndDropHandler: SimpleD3DraggingHandler = new SimpleD3DraggingHandler(
-      this.rootGroup,
-      this.chartConfig,
-      () => this.d3TreeWrapper.getTreeRoot().descendants(),
-      new SourceNodeModel())
+    this.nodeModelFactories.forEach(nodeModelFactory => {
+      const simpleDragAndDropHandler: SimpleD3DraggingHandler = new SimpleD3DraggingHandler(
+        this.rootGroup,
+        this.chartConfig,
+        () => this.d3TreeWrapper.getTreeRoot().descendants(),
+        nodeModelFactory);
 
-    NodeModelGroupFactory.create<ChartSourceNodeModel>(this.rootGroup, sources, new SourceNodeModel(dragAndDropHandler));
+      const newGroups = NodeModelGroupFactory.create<ChartSourceNodeModel>(
+        this.rootGroup,
+        sources.filter(source => source.data.type === nodeModelFactory.type),
+        nodeModelFactory);
+
+      newGroups.cursor('pointer');
+      newGroups.call(
+        d3.drag()
+          .on('start', simpleDragAndDropHandler.onDraggingStart.bind(simpleDragAndDropHandler))
+          .on('drag', simpleDragAndDropHandler.onDragging.bind(simpleDragAndDropHandler))
+          .on('end', simpleDragAndDropHandler.onDraggingEnd.bind(simpleDragAndDropHandler))
+      );
+    });
   }
 
-  public appendNewSources() {
+  public appendNewSources(): void {
     const length: number = this.getRandomInt(this.chartSources.length);
-    const indices: number[] = Array.apply(this, Array(length)).map(() => this.getRandomInt(this.chartSources.length - 1))
+    const indices: number[] = Array.apply(this, Array(length)).map(() => this.getRandomInt(this.chartSources.length))
     const filteredSources: ChartSourceNodeModel[] = this.chartSources.filter((source: any, index: number) => indices.includes(index));
 
     this.updateSourcesCoordinates(filteredSources);

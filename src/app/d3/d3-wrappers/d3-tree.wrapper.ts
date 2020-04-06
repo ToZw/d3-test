@@ -1,11 +1,15 @@
 import * as d3 from "d3";
 import { D3SelectionWrapper, D3SelectionType } from './d3-selection.wrapper';
 import { NodeModelGroupFactory } from '../node-models/factory/node-model-group.factory';
-import { NodeModelType } from '../node-models/models/node.model';
-import { TargetTreeNodeModelFactory } from '../node-models/tree-node-models/factory/target-tree-node-model.factory';
-import { TestoTreeNodeModelFactory } from '../node-models/tree-node-models/factory/testo-tree-node-model.factory';
+import { NodeModelFactory } from '../node-models/models/node.model';
+import { TargetNodeModelFactory } from '../node-models/factory/target-node-model.factory';
+import { TestoNodeModelFactory } from '../node-models/factory/testo-node-model.factory';
 import { ChartConfig } from '../models/chart-config';
 import { ChartTreeNodeDataModelProperties } from '../node-models/tree-node-models/models/chart-tree-node-data.model';
+import { SourceNodeModelFactory } from '../node-models/factory/source-node-model.factory';
+import { DnDModuleType } from 'src/app/d3-chart/d3-chart.component';
+import { SecondSourceNodeModelFactory } from '../node-models/factory/second-source-node-model.factory';
+import { TreeNodeModelFactoryPreparer } from '../node-models/tree-node-models/factory/tree-node-model-factory.preparer';
 
 export class D3TreeWrapper {
 
@@ -22,6 +26,13 @@ export class D3TreeWrapper {
   private nodeGroup: D3SelectionWrapper;
 
   private treeRootNode: d3.HierarchyPointNode<ChartTreeNodeDataModelProperties>;
+
+  private nodeModelFactories: NodeModelFactory[] = [
+    new TargetNodeModelFactory(new TreeNodeModelFactoryPreparer()),
+    new TestoNodeModelFactory(new TreeNodeModelFactoryPreparer()),
+    new SourceNodeModelFactory(new TreeNodeModelFactoryPreparer()),
+    new SecondSourceNodeModelFactory(new TreeNodeModelFactoryPreparer())
+  ];
 
   public constructor(parentSelection: D3SelectionWrapper, chartData: ChartTreeNodeDataModelProperties, chartConfig: ChartConfig) {
     this.parentSelection = parentSelection;
@@ -95,8 +106,45 @@ export class D3TreeWrapper {
   private updateNodes() {
     const descendants: d3.HierarchyPointNode<ChartTreeNodeDataModelProperties>[] = this.treeRootNode.descendants();
 
-    NodeModelGroupFactory.create(this.nodeGroup, descendants.filter(node => node.data.type === NodeModelType.TARGET), new TargetTreeNodeModelFactory(this));
-    NodeModelGroupFactory.create(this.nodeGroup, descendants.filter(node => node.data.type === NodeModelType.TESTO), new TestoTreeNodeModelFactory(this));
+    this.nodeModelFactories.forEach((factory: NodeModelFactory) => {
+      const newGroups: D3SelectionWrapper = NodeModelGroupFactory.create(this.nodeGroup, descendants.filter(node => node.data.type === factory.type), factory);
+
+      if (!newGroups.empty()) {
+        this.appendAddNodePath(newGroups, factory)
+      }
+    });
+  }
+
+  private appendAddNodePath(newGroups: D3SelectionWrapper, factory: NodeModelFactory): void {
+    newGroups
+      .appendPath()
+      .setSymbol(
+        d3.symbol()
+          .size(300)
+          .type(d3.symbolCross))
+      .transform(`translate(${factory.defaultSize.width}, 0)`)
+      .cursor('pointer')
+      .classed('add-node-path', true)
+      .onClick((node: d3.HierarchyPointNode<any>) => {
+        const newId = this.createChildId(node);
+
+        this.addNode(
+          node,
+          {
+            type: factory.creationType,
+            dndType: DnDModuleType.DND_TARGET,
+            id: newId,
+            name: newId
+          });
+      });
+  }
+
+  private createChildId(node: d3.HierarchyPointNode<any>): string {
+    const data = node.data;
+    const size = data.children ? data.children.length : 0;
+
+    // return data.id + '_' + Number.parseInt((Math.random() * 10000).toString()) ;
+    return data.id + '_' + size;
   }
 
   public addNode(node: d3.HierarchyPointNode<any>, newChild: any) {

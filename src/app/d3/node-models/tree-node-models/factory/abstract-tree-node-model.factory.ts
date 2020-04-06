@@ -1,11 +1,13 @@
-import { NodeModelFactory, NodeModelType } from '../../models/node.model';
+import { NodeModelFactory, NodeModelType, NodeModelSize } from '../../models/node.model';
 import { D3SelectionWrapper } from '../../../d3-wrappers/d3-selection.wrapper';
 
 export abstract class AbstractTreeNodeModelFactory implements NodeModelFactory {
 
   public abstract readonly type: NodeModelType;
 
-  protected abstract readonly defaultSize: number;
+  public abstract readonly creationType: NodeModelType;
+
+  public abstract readonly defaultSize: NodeModelSize;
 
   public constructor() {
   }
@@ -16,7 +18,7 @@ export abstract class AbstractTreeNodeModelFactory implements NodeModelFactory {
     }
 
     nodeGroups.transform((node: d3.HierarchyPointNode<any>) => {
-      const halfHeight: number = (node.data.height ? node.data.height : this.defaultSize) / 2;
+      const halfHeight: number = (node.data.height ? node.data.height : this.defaultSize.height) / 2;
 
       return `translate(${node.y}, ${node.x - halfHeight})`
     });
@@ -25,20 +27,12 @@ export abstract class AbstractTreeNodeModelFactory implements NodeModelFactory {
     const newGroups: D3SelectionWrapper = nodeGroups.filterEmptyGroups();
 
     newGroups.getData().forEach(node => {
-      node.data.width = this.defaultSize;
-      node.data.height = this.defaultSize;
+      node.data.width = this.defaultSize.width;
+      node.data.height = this.defaultSize.height;
     });
 
     return newGroups;
   }
 
-  protected createChildId(node: d3.HierarchyPointNode<any>): string {
-    const data = node.data;
-    const size = data.children ? data.children.length : 0;
-
-    // return data.id + '_' + Number.parseInt((Math.random() * 10000).toString()) ;
-    return data.id + '_' + size;
-  }
-
-  abstract createNodes(nodeGroups: D3SelectionWrapper): void;
+  abstract createNodes(nodeGroups: D3SelectionWrapper): D3SelectionWrapper;
 }

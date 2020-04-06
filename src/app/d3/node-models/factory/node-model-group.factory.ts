@@ -11,17 +11,18 @@ export class NodeModelGroupFactory {
    * @param nodeData
    * @param nodeModelFactory
    */
-  public static create<NodeData extends NodeModelProperties>(parentSelection: D3SelectionWrapper, nodeData: NodeData[], nodeModelFactory: NodeModelFactory): void {
+  public static create<NodeData extends NodeModelProperties>(parentSelection: D3SelectionWrapper, nodeData: NodeData[], nodeModelFactory: NodeModelFactory): D3SelectionWrapper {
     if (!nodeModelFactory) {
       throw new Error(`The parameter 'nodeModelFactory' is required!, ${nodeModelFactory}`);
     }
 
-    let modelGroup: D3SelectionWrapper = parentSelection.selectById(nodeModelFactory.type);
+    const groupId: string = `${parentSelection.getId()}__${nodeModelFactory.type}`;
+    let modelGroup: D3SelectionWrapper = parentSelection.selectById(groupId);
 
     if (modelGroup.empty()) {
       modelGroup = parentSelection
         .appendGroup()
-        .id(nodeModelFactory.type);
+        .id(groupId);
     }
 
     const nodeGroups: D3SelectionWrapper = modelGroup
@@ -32,6 +33,6 @@ export class NodeModelGroupFactory {
       .type((node: NodeData) => node.data.type)
       .id((node: NodeData) => node.data.id);
 
-    nodeModelFactory.createNodes(nodeGroups);
+    return nodeModelFactory.createNodes(nodeGroups);
   }
 }

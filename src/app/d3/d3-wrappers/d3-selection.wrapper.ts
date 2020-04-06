@@ -1,4 +1,5 @@
 import * as d3 from "d3";
+import { NodeModelSize } from '../node-models/models/node.model';
 export class D3SelectionWrapper<GElement extends d3.BaseType = any, Datum = any, PElement extends d3.BaseType = any, PDatum = any> {
 
   protected selection: D3Selection<GElement, Datum, PElement, PDatum>;
@@ -11,7 +12,7 @@ export class D3SelectionWrapper<GElement extends d3.BaseType = any, Datum = any,
     this.selection = selection;
   }
 
-  public getSelection(): D3Selection {
+  public getSelection(): D3Selection<GElement, Datum, PElement, PDatum> {
     return this.selection;
   }
 
@@ -109,8 +110,20 @@ export class D3SelectionWrapper<GElement extends d3.BaseType = any, Datum = any,
     return new D3SelectionWrapper(this.selection.join(enter as any, updateWrapper, exitWrapper));
   }
 
+
+  public getChildren(): D3SelectionWrapper<GElement, Datum, GElement, Datum> {
+    return this.selectAll<GElement, Datum>('*');
+  }
+
   public remove(): this {
     this.selection = this.selection.remove();
+    return this;
+  }
+
+  public removeChildren(): this {
+    const childrenSelection = this.getChildren();
+
+    childrenSelection.remove();
     return this;
   }
 
@@ -139,11 +152,15 @@ export class D3SelectionWrapper<GElement extends d3.BaseType = any, Datum = any,
     return new D3SelectionWrapper(this.selection.select(`#${id}`));
   }
 
+  public selectByClass(classId: string): D3SelectionWrapper {
+    return new D3SelectionWrapper(this.selection.select(`.${classId}`));
+  }
+
   public select<DescElement extends d3.BaseType>(selector: string | d3.ValueFn<GElement, Datum, DescElement> | null): D3SelectionWrapper<DescElement | null, Datum | undefined, PElement, PDatum> {
     return new D3SelectionWrapper<DescElement | null, Datum | undefined, PElement, PDatum>(this.selection.select<DescElement>(selector as any));
   }
 
-  public selectAll<DescElement extends d3.BaseType, OldDatum>(selector: string | d3.ValueFn<GElement, Datum, DescElement[] | ArrayLike<DescElement>> | null): D3SelectionWrapper<DescElement | null, OldDatum | undefined, GElement, Datum> {
+  public selectAll<DescElement extends d3.BaseType, OldDatum>(selector?: string | d3.ValueFn<GElement, Datum, DescElement[] | ArrayLike<DescElement>> | null): D3SelectionWrapper<DescElement | null, OldDatum | undefined, GElement, Datum> {
     return new D3SelectionWrapper<DescElement | null, OldDatum | undefined, GElement, Datum>(this.selection.selectAll<DescElement, OldDatum>(selector as any));
   }
 
@@ -254,10 +271,18 @@ export class D3SelectionWrapper<GElement extends d3.BaseType = any, Datum = any,
    * @param size the size of the rect, the text should be centered.
    * @see https://stackoverflow.com/a/47319284
    */
-  public centerTextInRect(size?: { rectWidth: number, rectHeight: number }): this {
+  public centerTextInRect(size?: NodeModelSize): this {
     return this
-      .x(node => (size && size.rectWidth ? size.rectWidth : node.data.width) / 2)
-      .y(node => (size && size.rectHeight ? size.rectHeight : node.data.height) / 2)
+      .x(node => (size && size.width ? size.width : node.data.width) / 2)
+      .y(node => (size && size.height ? size.height : node.data.height) / 2)
+      .dominantBaseline('middle')
+      .textAnchor("middle");
+  }
+
+  public centerTextInCircle(): this {
+    return this
+      .x(node => node.cx ? node.cx : 0)
+      .y(node => node.cy ? node.cy : 0)
       .dominantBaseline('middle')
       .textAnchor("middle");
   }
@@ -290,12 +315,28 @@ export class D3SelectionWrapper<GElement extends d3.BaseType = any, Datum = any,
     return this.attr('y', y);
   }
 
+  public cx(cx: D3AttributeValue): this {
+    return this.attr('cx', cx);
+  }
+
+  public cy(cy: D3AttributeValue): this {
+    return this.attr('cy', cy);
+  }
+
   public dx(dx: D3AttributeValue): this {
     return this.attr('dx', dx);
   }
 
   public dy(dy: D3AttributeValue): this {
     return this.attr('dy', dy);
+  }
+
+  public rx(rx: D3AttributeValue): this {
+    return this.attr('rx', rx);
+  }
+
+  public ry(ry: D3AttributeValue): this {
+    return this.attr('ry', ry);
   }
 
   public text(text: D3AttributeValue): this {
@@ -341,6 +382,15 @@ export class D3SelectionWrapper<GElement extends d3.BaseType = any, Datum = any,
     return this;
   }
 
+  public isClassed(names: string): boolean {
+    return this.selection.classed(names);
+  }
+
+  public classed(names: string, value: boolean | d3.ValueFn<GElement, Datum, boolean>): this {
+    this.selection.classed(names, value as any);
+    return this;
+  }
+
   public onClick(clickFunction: d3.ValueFn<any, any, void>, capture?: boolean): this {
     this.selection.on('click', clickFunction, capture);
     return this;
@@ -367,6 +417,10 @@ export class D3SelectionWrapper<GElement extends d3.BaseType = any, Datum = any,
     return this.append(D3SelectionType.CIRCLE);
   }
 
+  public appendEllipse(): D3SelectionWrapper {
+    return this.append(D3SelectionType.ELLIPSE);
+  }
+
   public appendText(): D3SelectionWrapper {
     return this.append(D3SelectionType.TEXT);
   }
@@ -383,6 +437,10 @@ export class D3SelectionWrapper<GElement extends d3.BaseType = any, Datum = any,
     return this.append(D3SelectionType.DEFS);
   }
 
+  public appendSelection(d3SelectionWrapper: D3SelectionWrapper<GElement, Datum, PElement, PDatum>): D3SelectionWrapper<GElement, Datum, PElement, PDatum> {
+    return new D3SelectionWrapper<GElement, Datum, PElement, PDatum>(this.selection.append<GElement>(() => d3SelectionWrapper.getSelection().node()));
+  }
+
   /**
    * Missing Generics compares to d3-append.
    */
@@ -392,6 +450,10 @@ export class D3SelectionWrapper<GElement extends d3.BaseType = any, Datum = any,
 
   public static select(selector: string | d3.ValueFn<any, any, any> | null): D3SelectionWrapper {
     return new D3SelectionWrapper(d3.select(selector as any));
+  }
+
+  public static selectById(id: string): D3SelectionWrapper {
+    return new D3SelectionWrapper(d3.select(`#${id}`));
   }
 
   public static selectAll(selector: string | d3.ValueFn<any, any, any[] | ArrayLike<any>> | null): D3SelectionWrapper {
@@ -404,12 +466,13 @@ export type D3Selection<GElement extends d3.BaseType = any, Datum = any, PElemen
 export type D3AttributeValue<GElement extends d3.BaseType = any, Datum = any> = d3.ValueFn<GElement, Datum, string | number | boolean | null> | string | number | boolean | Array<any> | null;
 
 export enum D3SelectionType {
-  SVG = 'svg',
-  GROUP = 'g',
-  RECT = 'rect',
   CIRCLE = 'circle',
-  TEXT = 'text',
-  PATH = 'path',
-  USE = 'use',
   DEFS = 'defs',
+  ELLIPSE = 'ellipse',
+  GROUP = 'g',
+  PATH = 'path',
+  RECT = 'rect',
+  SVG = 'svg',
+  TEXT = 'text',
+  USE = 'use',
 }
