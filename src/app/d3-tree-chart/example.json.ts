@@ -1,42 +1,42 @@
 export const treeData: any = {
   "sources": [
     {
-      "data": { "id": "source_1", "type": "source", "dndType": "DnDSource", "width": 50, "height": 50, "value": "Customer Input Data SECIF1" },
+      "data": { "id": "source_1", "type": "source", "dndType": "DnDSource", "value": "Customer Input Data SECIF1" },
       "x": 50,
       "y": 50
     },
     {
-      "data": { "id": "source_2", "type": "source", "dndType": "DnDSource", "width": 50, "height": 50, "value": "Credit Data SECIF1" },
+      "data": { "id": "source_2", "type": "source", "dndType": "DnDSource", "value": "Credit Data SECIF1" },
       "x": 50,
       "y": 50
     },
     {
-      "data": { "id": "source_3", "type": "source", "dndType": "DnDSource", "width": 50, "height": 50, "value": "BASIC Data SECIF1" },
+      "data": { "id": "source_3", "type": "source", "dndType": "DnDSource", "value": "BASIC Data SECIF1" },
       "x": 50,
       "y": 50
     },
     {
-      "data": { "id": "source_4", "type": "source", "dndType": "DnDSource", "width": 50, "height": 50, "value": "Another source" },
+      "data": { "id": "source_4", "type": "source", "dndType": "DnDSource", "value": "Another source" },
       "x": 50,
       "y": 50
     },
     {
-      "data": { "id": "source_5", "type": "source", "dndType": "DnDSource", "width": 50, "height": 50, "value": "Just another source" },
+      "data": { "id": "source_5", "type": "source", "dndType": "DnDSource", "value": "Just another source" },
       "x": 50,
       "y": 50
     },
     {
-      "data": { "id": "source_6", "type": "source", "dndType": "DnDSource", "width": 50, "height": 50, "value": "Whoohoo a source" },
+      "data": { "id": "source_6", "type": "source", "dndType": "DnDSource", "value": "Whoohoo a source" },
       "x": 50,
       "y": 50
     },
     {
-      "data": { "id": "source_7", "type": "source", "dndType": "DnDSource", "width": 50, "height": 50, "value": "Yup I'm a source" },
+      "data": { "id": "source_7", "type": "source", "dndType": "DnDSource", "value": "Yup I'm a source" },
       "x": 50,
       "y": 50
     },
     {
-      "data": { "id": "second_source_1", "type": "secondSource", "dndType": "DnDSource", "cx": 0, "cy": 0, "rx": 50, "ry": 25, "width": 50, "height": 25, "value": "Second Source" },
+      "data": { "id": "second_source_1", "type": "secondSource", "dndType": "DnDSource", "value": "Second Source" },
       "x": 50,
       "y": 50
     },

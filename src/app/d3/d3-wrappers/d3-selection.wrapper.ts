@@ -279,13 +279,63 @@ export class D3SelectionWrapper<GElement extends d3.BaseType = any, Datum = any,
       .textAnchor("middle");
   }
 
-  public centerTextInCircle(): this {
+  public centerTextInCircle(size?: NodeModelSize): this {
     return this
-      .x(node => node.cx ? node.cx : 0)
-      .y(node => node.cy ? node.cy : 0)
+      .x(node => (size && size.width ? size.width : node.cx) / 2)
+      // .y(node => size && size.height ? size.height : node.cy)
       .dominantBaseline('middle')
       .textAnchor("middle");
   }
+
+  public fitText(width: number, units: string = 'px', lengthAdjust: 'spacing' | 'spacingAndGlyphs' = 'spacingAndGlyphs'): this {
+    return this
+      .textLength(`${width}${units}`)
+      .lengthAdjust(lengthAdjust);
+  }
+
+  // public autoWrapText(width: number): this {
+  //   // const text = d3.select(this);
+  //   if (this.empty()) {
+  //     return this;
+  //   }
+
+  //   const words: string[] = this
+  //     .getText()
+  //     .split(/\s+/)
+  //     .reverse();
+  //   // const lineHeight = 1.1; // ems
+  //   const y: string = this.getY();
+  //   const dy: number = parseFloat(this.getAttr("dy"));
+  //   let word: string;
+  //   let line: string[] = [];
+  //   let lineNumber: number = 0;
+  //   let tspan = this.text(null)
+  //     .appendTSpan()
+  //     .x(0)
+  //     .y(y)
+  //     .dy(`${dy}em`);
+
+  //   while (word = words.pop()) {
+  //     line.push(word);
+  //     tspan.text(line.join(' '));
+
+  //     if (tspan.node().getComputedTextLength() > width) {
+  //       line.pop();
+  //       tspan.text(line.join(' '));
+  //       line = [word];
+  //       tspan = this
+  //         .appendTSpan()
+  //         .x(0)
+  //         .y(y)
+  //         // .dy(++lineNumber * lineHeight + dy + "em")
+  //         .dy(++lineNumber * dy + "em")
+  //         .text(word);
+  //     }
+  //   }
+
+  //   return this;
+  // }
+
 
   public appendBackgroundColorRect(color: string): D3SelectionWrapper {
     return this
@@ -309,6 +359,10 @@ export class D3SelectionWrapper<GElement extends d3.BaseType = any, Datum = any,
 
   public x(x: D3AttributeValue): this {
     return this.attr('x', x);
+  }
+
+  public getY(): string {
+    return this.getAttr('y');
   }
 
   public y(y: D3AttributeValue): this {
@@ -339,8 +393,22 @@ export class D3SelectionWrapper<GElement extends d3.BaseType = any, Datum = any,
     return this.attr('ry', ry);
   }
 
+  public getText(): string {
+    return this.selection.text();
+  }
+
   public text(text: D3AttributeValue): this {
     this.selection.text(text as any);
+    return this;
+  }
+
+  public textLength(width: D3AttributeValue): this {
+    this.selection.attr('textLength', width as any);
+    return this;
+  }
+
+  public lengthAdjust(type: 'spacing' | 'spacingAndGlyphs' | d3.ValueFn<d3.BaseType, 'spacing' | 'spacingAndGlyphs', this>): this {
+    this.selection.attr('lengthAdjust', type as any);
     return this;
   }
 
@@ -437,6 +505,10 @@ export class D3SelectionWrapper<GElement extends d3.BaseType = any, Datum = any,
     return this.append(D3SelectionType.DEFS);
   }
 
+  public appendTSpan(): D3SelectionWrapper {
+    return this.append(D3SelectionType.TSPAN);
+  }
+
   public appendSelection(d3SelectionWrapper: D3SelectionWrapper<GElement, Datum, PElement, PDatum>): D3SelectionWrapper<GElement, Datum, PElement, PDatum> {
     return new D3SelectionWrapper<GElement, Datum, PElement, PDatum>(this.selection.append<GElement>(() => d3SelectionWrapper.getSelection().node()));
   }
@@ -474,5 +546,6 @@ export enum D3SelectionType {
   RECT = 'rect',
   SVG = 'svg',
   TEXT = 'text',
+  TSPAN = 'tspan',
   USE = 'use',
 }

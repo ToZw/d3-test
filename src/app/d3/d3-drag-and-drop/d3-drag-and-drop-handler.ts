@@ -82,10 +82,10 @@ export class SimpleD3DraggingHandler<DataNode extends NodeModelProperties = Node
     switch (draggingNodeData.type) {
       case NodeModelType.SECOND_SOURCE:
         return {
-          top: d3.event.y - draggingNodeHeight,
-          left: d3.event.x - draggingNodeWidth - this.chartConfig.marginLeft,
+          top: d3.event.y - draggingNodeHeight  / 2,
+          left: d3.event.x - this.chartConfig.marginLeft,
           right: d3.event.x + draggingNodeWidth - this.chartConfig.marginLeft,
-          bottom: d3.event.y + draggingNodeHeight
+          bottom: d3.event.y + draggingNodeHeight / 2
         };
       default:
         return {
@@ -103,10 +103,10 @@ export class SimpleD3DraggingHandler<DataNode extends NodeModelProperties = Node
     switch (targetNode.data.type) {
       case NodeModelType.SECOND_SOURCE:
         return {
-          top: targetNode.x - targetNode.data.height,
-          left: targetNode.y - targetNode.data.width,
+          top: targetNode.x - targetNode.data.height / 2,
+          left: targetNode.y,
           right: targetNode.y + targetNode.data.width,
-          bottom: targetNode.x + targetNode.data.height
+          bottom: targetNode.x + targetNode.data.height  / 2
         };
       default:
         return {

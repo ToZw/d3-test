@@ -9,7 +9,7 @@ export class SourceNodeModelFactory extends AbstractNodeModelFactory {
 
   public readonly creationType: NodeModelType = NodeModelType.TARGET;
 
-  public readonly defaultSize: NodeModelSize = { width: 50, height: 50 };
+  public readonly defaultSize: NodeModelSize = { width: 100, height: 50 };
 
   public constructor(nodeModelFactoryPreparer?: NodeModelFactoryPreparer) {
     super(nodeModelFactoryPreparer);
@@ -28,8 +28,10 @@ export class SourceNodeModelFactory extends AbstractNodeModelFactory {
 
     newGroups
       .appendText()
-      .centerTextInRect()
-      .text((node) => node.data.value);
+      .centerTextInRect(this.defaultSize)
+      .dy('0.1em')
+      .text((node) => node.data.value)
+      .fitText(this.defaultSize.width);
 
     return newGroups;
   }

@@ -46,6 +46,11 @@ export class SimpleNodeModelFactoryPreparer implements NodeModelFactoryPreparer 
   public prepare(nodeGroups: D3SelectionWrapper, defaultSize: NodeModelSize): D3SelectionWrapper {
     nodeGroups.transform((node: NodeModelProperties) => `translate(${node.x}, ${node.y})`);
 
+    nodeGroups.each((nodeModel: NodeModelProperties) => {
+      nodeModel.data.width = defaultSize.width;
+      nodeModel.data.height = defaultSize.height;
+    });
+
     /* Filter all new groups, so old groups won't be appended multiple times */
     return nodeGroups.filterEmptyGroups();
   };

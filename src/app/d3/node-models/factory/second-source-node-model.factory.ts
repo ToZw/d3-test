@@ -9,7 +9,7 @@ export class SecondSourceNodeModelFactory extends AbstractNodeModelFactory {
 
   public readonly creationType: NodeModelType = NodeModelType.TARGET;
 
-  public readonly defaultSize: NodeModelSize = { width: 50, height: 25 };
+  public readonly defaultSize: NodeModelSize = { width: 100, height: 50 };
 
   public constructor(nodeModelFactoryPreparer?: NodeModelFactoryPreparer) {
     super(nodeModelFactoryPreparer);
@@ -18,20 +18,29 @@ export class SecondSourceNodeModelFactory extends AbstractNodeModelFactory {
   public createNodes(nodeGroups: D3SelectionWrapper<d3.BaseType, ChartSourceNodeModel, d3.BaseType, ChartSourceNodeModel>): D3SelectionWrapper {
     const newGroups: D3SelectionWrapper = super.createNodes(nodeGroups);
 
+    const halfWidth: number = this.defaultSize.width / 2;
+    const halfHeight: number = this.defaultSize.height / 2;
+
+    nodeGroups.each((nodeModel: ChartSourceNodeModel) => {
+      nodeModel.data.cx = halfWidth;
+      nodeModel.data.rx = halfWidth;
+      nodeModel.data.ry = halfHeight;
+    });
+
     newGroups
       .appendEllipse()
       .classed('geometry-element', true)
-      .cx(node => node.data.cx ? node.data.cx : 0)
-      .cy(node => node.data.cy ? node.data.cy : 0)
-      .rx(this.defaultSize.width)
-      .ry(this.defaultSize.height)
+      .cx(halfWidth)
+      .cy(0)
+      .rx(halfWidth)
+      .ry(halfHeight)
       .fill('yellow')
       .stroke('blue')
       .strokeWidth('2');
 
     newGroups
       .appendText()
-      .centerTextInCircle()
+      .centerTextInCircle(this.defaultSize)
       .text((node) => node.data.value);
 
     return newGroups;
